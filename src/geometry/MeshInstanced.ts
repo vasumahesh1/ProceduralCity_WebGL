@@ -57,8 +57,11 @@ class MeshInstanced extends Drawable {
     this.name = n;
 
     this.instances = 0;
+    this.baseColor = vec4.fromValues(1,1,1,1);
 
     this.positions = new Float32Array([]);
+    this.scales = new Float32Array([]);
+    this.rotations = new Float32Array([]);
     this.normals = new Float32Array([]);
     this.vertices = new Float32Array([]);
     this.colors = new Float32Array([]);

@@ -22,6 +22,9 @@ out vec4 out_Col;
 
 void main() {
 
+  out_Col = vec4(1,0,0,1);
+  return;
+
   // Material base color (before shading)
   vec4 diffuseColor = fs_Col;
   float alpha = diffuseColor.a;

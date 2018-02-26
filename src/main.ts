@@ -127,6 +127,8 @@ function loadAssets() {
   boundingLines.linesArray.push(vec4.fromValues(30, 0, 0, 1.0));
   boundingLines.linesArray.push(vec4.fromValues(0, 0, 0, 1.0));
   boundingLines.linesArray.push(vec4.fromValues(0, 0, 30, 1.0));
+  boundingLines.linesArray.push(vec4.fromValues(0, 0, 0, 1.0));
+  boundingLines.linesArray.push(vec4.fromValues(0, 30, 0, 1.0));
 
   sky = new Sky(vec3.fromValues(0, 0, 0));
   sky.create();
@@ -135,7 +137,7 @@ function loadAssets() {
   (<any>window).AssetLibrary = assetLibrary;
 
   let assets = {
-    'WallComponent': './src/objs/comp_wall.obj'
+    'WallComponent1': './src/objs/comp_wall.obj'
   };
 
   assetLibrary.load(assets)
@@ -147,11 +149,19 @@ function loadAssets() {
         meshInstances[key].rawMesh = assetLibrary.meshes[key];
       }
 
+      logTrace('MeshInstances are:', meshInstances);
+
       for (let itr = 0; itr < baseBuildingConfig.buildings.length; ++itr) {
         let building = baseBuildingConfig.buildings[itr];
         testBuilding = new Building(building, meshInstances);
         testBuilding.construct();
       }
+
+      for(let key in meshInstances) {
+        meshInstances[key].create();
+      }
+
+      boundingLines.create();
 
       FlagIsRenderable = true;
     })
@@ -473,6 +483,8 @@ function main() {
       let mesh = meshInstances[key];
       renderer.render(camera, shader, [mesh]);
     }
+
+    renderer.render(camera, visualShader, [boundingLines]);
   }
 
   // This function will be called every frame
@@ -519,6 +531,7 @@ function main() {
 
     mainShader.setTime(frameCount);
     mainShader.setEyePosition(vec4.fromValues(position[0], position[1], position[2], 1));
+    visualShader.setEyePosition(vec4.fromValues(position[0], position[1], position[2], 1));
 
     mainShader.setLightPosition(lightDirection);
 
