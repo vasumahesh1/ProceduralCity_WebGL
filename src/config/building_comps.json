@@ -1,0 +1,7 @@
+{
+  "components": [{
+    "name": "WallComponent1",
+    "url": "./src/objs/comp_wall.obj",
+    "width": 1
+  }]
+}

@@ -72,8 +72,11 @@ void main() {
 
   fs_Col = vec4(64,21,15, 255) / 255.0;
 
+  vertexNormal = vertexNormal * vec4(1.0 / vs_InstScale.x, 1.0 / vs_InstScale.y, 1.0 / vs_InstScale.z, 0.0);
+  vertexNormal = rotateByQuat(vertexNormal, vs_InstRotation);
+
   // mat3 invTranspose = inverse(mat3(instanceModel));
-  fs_Nor = vs_Nor; // vec4(invTranspose * vec3(vertexNormal), 0);
+  fs_Nor = normalize(vertexNormal); // vec4(invTranspose * vec3(vertexNormal), 0);
 
   vec4 modelposition = u_Model * vertexPosition;
   modelposition = vs_InstScale * vertexPosition;

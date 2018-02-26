@@ -1,0 +1,123 @@
+{
+  "buildings": [{
+    "name": "Building 1",
+    "selectionWeight": 100,
+    "walls": [{
+      "rng": {
+        "seed": 17,
+        "type": "WeightedRNG",
+        "val": {
+          "WallComponent1": 10
+        }
+      },
+      "availability": {
+        "floors": [3, 5]
+      }
+    }, {
+      "rng": {
+        "seed": 123,
+        "type": "WeightedRNG",
+        "val": {
+          "WallComponent1": 10
+        }
+      },
+      "default": true
+    }],
+    "floors": {
+      "rng": {
+        "seed": 213,
+        "type": "RNG",
+        "min": 3,
+        "max": 5
+      }
+    },
+    "constraints": {
+      "populationDensity": "high",
+      "wallHeight": {
+        "seed": 1343,
+        "type": "RNG",
+        "min": 3,
+        "max": 5
+      }
+    },
+    "lot": {
+      "sides": [{
+        "start": [0, 0],
+        "end": [30, 0]
+      }, {
+        "start": [30, 0],
+        "end": [30, 30]
+      }, {
+        "start": [30, 30],
+        "end": [0, 30]
+      }, {
+        "start": [0, 30],
+        "end": [0, 0]
+      }]
+    }
+  }]
+}
+
+
+{
+  "buildings": [{
+    "name": "Building 1",
+    "selectionWeight": 100,
+    "walls": [{
+      "rng": {
+        "seed": 17,
+        "type": "WeightedRNG",
+        "val": {
+          "WallComponent1": 10
+        }
+      },
+      "availability": {
+        "floors": [3, 5]
+      }
+    }, {
+      "rng": {
+        "seed": 123,
+        "type": "WeightedRNG",
+        "val": {
+          "WallComponent1": 10
+        }
+      },
+      "default": true
+    }],
+    "floors": {
+      "rng": {
+        "seed": 213,
+        "type": "RNG",
+        "min": 3,
+        "max": 5
+      }
+    },
+    "constraints": {
+      "populationDensity": "high",
+      "wallHeight": {
+        "seed": 1343,
+        "type": "RNG",
+        "min": 3,
+        "max": 5
+      }
+    },
+    "lot": {
+      "sides": [{
+        "start": [-10, 0],
+        "end": [10, 0]
+      }, {
+        "start": [10, 0],
+        "end": [15, 10]
+      }, {
+        "start": [15, 10],
+        "end": [0, 30]
+      }, {
+        "start": [0, 30],
+        "end": [-15, 10]
+      }, {
+        "start": [-15, 10],
+        "end": [-10, 0]
+      }]
+    }
+  }]
+}

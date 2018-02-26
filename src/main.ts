@@ -14,11 +14,12 @@ import Camera from './Camera';
 import { setGL } from './globals';
 import { ShaderControls, WaterControls } from './rendering/gl/ShaderControls';
 import ShaderProgram, { Shader } from './rendering/gl/ShaderProgram';
-import Building from './core/shape_grammer/Building';
+import { Building, BuildingComponent } from './core/shape_grammer/Building';
 import AssetLibrary from './core/utils/AssetLibrary';
 import WeightedRNG from './core/rng/WeightedRNG';
 
 var baseBuildingConfig = require('./config/buildings.json');
+var baseBuildingComps = require('./config/building_comps.json');
 
 localStorage.debug = 'mainApp:*:info*,mainApp:*:error*,mainApp:*:trace*';
 
@@ -29,6 +30,7 @@ var logError = Logger("mainApp:main:error");
 (<any>window).Building = Building;
 
 let meshInstances: { [symbol: string]: MeshInstanced; } = { };
+let buildingComps: { [symbol: string]: BuildingComponent; } = { };
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -40,7 +42,7 @@ let controls = {
   axiom: "[F][/-F][*+F][++*F][--*F]",
   seed: 858.739,
   iterations: 4,
-  lightDirection: [15, 15, 15],
+  lightDirection: [1000, 1000, 1000],
   influencers: {
     sunlight: 0.0,
     gravity: 5.0,
@@ -136,9 +138,12 @@ function loadAssets() {
   assetLibrary  = new AssetLibrary();
   (<any>window).AssetLibrary = assetLibrary;
 
-  let assets = {
-    'WallComponent1': './src/objs/comp_wall.obj'
-  };
+  let assets: any = {};
+
+  for (let itr = 0; itr < baseBuildingComps.components.length; ++itr) {
+    let comp = baseBuildingComps.components[itr];
+    assets[comp.name] = comp.url;
+  }
 
   assetLibrary.load(assets)
     .then(function() {
@@ -151,9 +156,17 @@ function loadAssets() {
 
       logTrace('MeshInstances are:', meshInstances);
 
+      for (let itr = 0; itr < baseBuildingComps.components.length; ++itr) {
+        let comp = baseBuildingComps.components[itr];
+        let compObj = new BuildingComponent();
+        compObj.instance = meshInstances[comp.name];
+        compObj.width = comp.width;
+        buildingComps[comp.name] = compObj;
+      }
+
       for (let itr = 0; itr < baseBuildingConfig.buildings.length; ++itr) {
         let building = baseBuildingConfig.buildings[itr];
-        testBuilding = new Building(building, meshInstances);
+        testBuilding = new Building(building, buildingComps);
         testBuilding.construct();
       }
 
@@ -442,7 +455,7 @@ function main() {
 
   // Initial call to load scene
 
-  const camera = new Camera(vec3.fromValues(8, 8, -8), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(30, 30, 30), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.05, 0.05, 0.05, 1);
