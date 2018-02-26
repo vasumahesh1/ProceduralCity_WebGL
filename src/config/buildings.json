@@ -1,0 +1,22 @@
+{
+  "buildings": [{
+    "name": "Building 1",
+    "selectionWeight": 100,
+    "walls": {
+      "seed": 17,
+      "type": "WeightedRNG",
+      "val": {
+        "WallComponent1": 10
+      }
+    },
+    "floor": {
+      "seed": 17,
+      "type": "RNG",
+      "min": 3,
+      "max": 5
+    },
+    "constraints": {
+      "populationDensity": "high"
+    }
+  }]
+}

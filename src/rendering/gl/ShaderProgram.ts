@@ -38,6 +38,8 @@ class ShaderProgram {
   attrNor: number;
   attrCol: number;
   attrInstancePos: number;
+  attrInstanceScale: number;
+  attrInstanceRotation: number;
 
   unifModel: WebGLUniformLocation;
   unifModelInvTr: WebGLUniformLocation;
@@ -85,6 +87,8 @@ class ShaderProgram {
     this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
     this.attrInstancePos = gl.getAttribLocation(this.prog, "vs_InstPos");
+    this.attrInstanceScale = gl.getAttribLocation(this.prog, "vs_InstScale");
+    this.attrInstanceRotation = gl.getAttribLocation(this.prog, "vs_InstRotation");
     this.unifModel = gl.getUniformLocation(this.prog, "u_Model");
     this.unifModelInvTr = gl.getUniformLocation(this.prog, "u_ModelInvTr");
     this.unifViewProj = gl.getUniformLocation(this.prog, "u_ViewProj");
@@ -378,6 +382,24 @@ class ShaderProgram {
 
       if (d.isInstanced()) {
         gl.vertexAttribDivisor(this.attrInstancePos, 1);
+      }
+    }
+
+    if (this.attrInstanceRotation != -1 && d.bindInstanceRotation()) {
+      gl.enableVertexAttribArray(this.attrInstanceRotation);
+      gl.vertexAttribPointer(this.attrInstanceRotation, 4, gl.FLOAT, false, 0, 0);
+
+      if (d.isInstanced()) {
+        gl.vertexAttribDivisor(this.attrInstanceRotation, 1);
+      }
+    }
+
+    if (this.attrInstanceScale != -1 && d.bindInstanceScale()) {
+      gl.enableVertexAttribArray(this.attrInstanceScale);
+      gl.vertexAttribPointer(this.attrInstanceScale, 4, gl.FLOAT, false, 0, 0);
+
+      if (d.isInstanced()) {
+        gl.vertexAttribDivisor(this.attrInstanceScale, 1);
       }
     }
 

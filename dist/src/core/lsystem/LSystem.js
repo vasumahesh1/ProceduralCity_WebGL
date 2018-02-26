@@ -59,7 +59,6 @@ class LSystemExecutionScope {
     constructor() {
         this.itr = 0;
         this.depth = 1;
-        this.rootString = "";
         this.stack = new Stack();
         this.turtle = new LSystemTurtle();
     }
@@ -186,10 +185,10 @@ class LSystem {
                 if (!symbolRuleSet) {
                     continue;
                 }
-                current.pop();
+                current.splice(stringItr, 1);
                 let rule = this.selectRule(symbolRuleSet, stringItr, itr);
                 for (let i = 0; i < rule.expr.length; ++i) {
-                    current.push(rule.expr[i]);
+                    current.splice(stringItr + i, 0, rule.expr[i]);
                 }
                 stringItr += rule.expr.length - 1;
             }
@@ -214,8 +213,7 @@ class LSystem {
         return this;
     }
     process(scope) {
-        let rootString = this.construction;
-        rootString;
+        let rootString = this.rootString;
         this.execScope = new LSystemExecutionScope();
         this.execScope.scope = scope;
         this.execScope.rootString = rootString;

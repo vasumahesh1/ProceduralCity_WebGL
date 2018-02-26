@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "3d-view-controls": "^2.2.0",
+    "async": "^2.6.0",
     "box-intersect": "^1.0.1",
     "dat-gui": "^0.5.0",
     "debug": "^3.1.0",
