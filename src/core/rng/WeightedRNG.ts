@@ -25,6 +25,8 @@ class WeightedRNG {
     let noise = this.noiseGen.simplex2(this.rollItr * 13, this.rollItr * 29);
     this.rollItr += 19;
 
+    noise = (noise + 1.0) / 2.0;
+
     let range = noise * this.totalWeight;
 
     for(let key in this.weights) {

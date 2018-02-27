@@ -1,5 +1,8 @@
 let Noise = require('noisejs').Noise;
 
+var Logger = require('debug');
+var logTrace = Logger("mainApp:rng:trace");
+
 class RNG {
   noiseGen: any;
   min: number;
@@ -20,7 +23,12 @@ class RNG {
     let noise = this.noiseGen.simplex2(this.rollItr * 13, this.rollItr * 29);
     this.rollItr += 19;
 
+    noise = (noise + 1.0) / 2.0;
+
     let val = (noise * (this.max - this.min)) + this.min;
+
+    logTrace('RNG Rolled', val);
+
     return val;
   }
 }

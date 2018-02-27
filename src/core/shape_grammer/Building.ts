@@ -37,7 +37,31 @@ class FloorConstraint {
 
 class BuildCommand {
   type: string;
-  length: number;
+  width: number;
+}
+
+class LotConfig {
+  type: string;
+  mode: string;
+  input: string;
+  separator: string;
+  rng: any;
+
+  roll() {
+    let finalStr = "";
+
+    if (this.type == "pattern" && this.mode == "repeat") {
+      let repeatCount = Math.round(this.rng.roll());
+
+      finalStr = this.separator;
+
+      for (var i = 0; i < repeatCount; ++i) {
+        finalStr = finalStr + this.input + this.separator;
+      }
+    }
+
+    return finalStr;
+  }
 }
 
 class LotSide {
@@ -50,9 +74,11 @@ class LotSide {
   deltaX: number;
   deltaY: number;
 
-  configuration: string;
+  config: LotConfig;
 
-  constructor(start: any, end: any, config: string) {
+  sideNormal: vec3;
+
+  constructor(start: any, end: any, config: LotConfig) {
     this.startX = start[0];
     this.startY = start[1];
 
@@ -62,7 +88,15 @@ class LotSide {
     this.deltaX = this.endX - this.startX;
     this.deltaY = this.endY - this.startY;
 
-    this.configuration = config;
+    let pole = vec3.fromValues(0, 1, 0);
+    let p = vec3.fromValues(end[0] - start[0], 0, end[1] - start[1]);
+
+    this.sideNormal  = vec3.create();
+    vec3.cross(this.sideNormal, pole, p);
+
+    vec3.normalize(this.sideNormal, this.sideNormal);
+
+    this.config = config;
   }
 }
 
@@ -163,9 +197,22 @@ class Building {
   private loadLot(config: any) {
     let lot = new Lot();
     
+    let defaultConfig = new LotConfig();
+    defaultConfig.type = "pattern";
+    defaultConfig.mode = "repeat";
+    defaultConfig.input = "W";
+    defaultConfig.separator = "*";
+    defaultConfig.rng = this.getRNG({
+      seed: 213,
+      type: 'RNG',
+      min: 3,
+      max: 5
+    });
+
     for (var itr = 0; itr < config.sides.length; ++itr) {
       let side = config.sides[itr];
-      let lotSide = new LotSide(side.start, side.end, side.configuration || "W*");
+
+      let lotSide = new LotSide(side.start, side.end, side.config || defaultConfig);
       lot.sides.push(lotSide);
     }
 
@@ -202,54 +249,52 @@ class Building {
     info.strechable = 0;
     info.required = 0;
 
-    let configuration = lotSide.configuration;
+    let config = lotSide.config;
+    let buildString = config.roll();
 
-    for (var itr = 0; itr < configuration.length; itr += 2) {
-      let obj = configuration[itr];
-      let count = configuration[itr + 1];
+    logTrace(`Build String: ${buildString}`);
+
+    for (var itr = 0; itr < buildString.length; itr += 1) {
+      let obj = buildString[itr];
 
       let width = 1;
 
-      if (obj == 'E') {
-        width = window.width;
+      if (obj == '*') {
+        info.strechable++;
       } else if (obj == 'W') {
         width = wall.width;
       }
-
-      if (count == "*") {
-        info.strechable++;
-      }
-      else {
-        info.required += Number.parseInt(count) * width;
-      }
+      
+      info.required += width;
     }
 
     let starLength = Math.floor((length - info.required) / info.strechable);
 
     let commands = Array<BuildCommand>();
 
-    for (var itr = 0; itr < configuration.length; itr += 2) {
-      let obj = configuration[itr];
-      let count = configuration[itr + 1];
+    let cmd = new BuildCommand();
+    cmd.type = 'wall';
+    cmd.width = length;
+
+    commands.push(cmd);
+
+    for (var itr = 0; itr < buildString.length; itr += 1) {
+      let obj = buildString[itr];
 
       let width = 1;
       let type: string;
 
-      if (obj == 'E') {
-        width = window.width;
-        type = 'window';
-      } else if (obj == 'W') {
-        width = wall.width;
-        type = 'wall';
-      }
-
-      if (count == "*") {
+      if (obj == '*') {
         width = starLength;
+        type = "translate";
+      } else if (obj == 'W') {
+        width = 1; // window.width;
+        type = 'window';
       }
 
       let cmd = new BuildCommand();
       cmd.type = type;
-      cmd.length = width;
+      cmd.width = width;
 
       length -= width;
 
@@ -258,8 +303,13 @@ class Building {
 
     if (length > 0) {
       logTrace(`Overflow on LotSide detected with Value: ${length}`);
-      commands[commands.length - 1].length += length;
+      let distrib = length / 2.0;
+
+      commands[commands.length - 1].width += distrib;
+      commands[1].width += distrib;
     }
+
+    logTrace(`Final Commands: `, commands);
 
     return commands;
   }
@@ -281,9 +331,6 @@ class Building {
 
     for (var itr = 0; itr < this.lot.sides.length; ++itr) {
       let side = this.lot.sides[itr];
-
-      let itrX = side.startX;
-      let itrY = side.startY;
 
       let cmds = this.getBuildCommandsForSide(side, null, selectedWallComp);
 
@@ -314,6 +361,10 @@ class Building {
       let worldXVec3 = vec3.fromValues(worldX[0], worldX[1], worldX[2]);
       vec3.normalize(worldXVec3, worldXVec3);
 
+      let sideNormalVec4 = vec4.fromValues(side.sideNormal[0], side.sideNormal[1], side.sideNormal[2], 0);
+
+      logTrace(`Side Normal: ${side.sideNormal[0]}, ${side.sideNormal[1]}, ${side.sideNormal[2]}`);
+
       if(vec3.length(axis) <= 0.00001) {
         quat = vec4.fromValues(0, 0, 0, 1);
       }
@@ -327,23 +378,39 @@ class Building {
       }
 
       for (var cmdItr = 0; cmdItr < cmds.length; ++cmdItr) {
-        let cmd = cmds[0];
+        let cmd = cmds[cmdItr];
 
-        for (var cLenItr = 0; cLenItr < cmd.length; ++cLenItr) {
-
+        if (cmd.type == "wall") {
           let localScale = vec3.create();
           vec3.copy(localScale, scale);
 
-          if (cLenItr + 1 > cmd.length) {
-            localScale[0] = cmd.length - cLenItr;
-          }
+          localScale[0] *= cmd.width;
 
           logTrace('Comp Instance Values: ', translate, quat, localScale);
           selectedWallComp.instance.addInstance(translate, quat, localScale);
+        }
+        else if (cmd.type == "translate") {
+          let widthDirection = vec3.create();
+          vec3.scale(widthDirection, direction, cmd.width)
+          vec4.add(translate, translate, vec4.fromValues(widthDirection[0], widthDirection[1], widthDirection[2], 0));
 
-          // let widthDirection = vec3.create();
-          // vec3.scale(widthDirection, direction, cmd.length)
-          vec4.add(translate, translate, directionVec4);
+          logTrace(`New Translation: ${translate[0]}, ${translate[1]}, ${translate[2]}`);
+        }
+        else if (cmd.type == "window") {
+          let localScale = vec3.create();
+          vec3.copy(localScale, scale);
+
+          localScale[0] *= cmd.width;
+
+          let localTranslate = vec4.create();
+          vec4.add(localTranslate, translate, sideNormalVec4);
+
+          logTrace('Window Instance Values: ', localTranslate, quat, localScale);
+          selectedWallComp.instance.addInstance(localTranslate, quat, localScale);
+
+          let widthDirection = vec3.create();
+          vec3.scale(widthDirection, direction, cmd.width)
+          vec4.add(translate, translate, vec4.fromValues(widthDirection[0], widthDirection[1], widthDirection[2], 0));
         }
       }
     }
