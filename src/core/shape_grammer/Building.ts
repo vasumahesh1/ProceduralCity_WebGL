@@ -33,6 +33,8 @@ class WallConstraint {
 
 class FloorConstraint {
   rng: any;
+  typeRng: any;
+  heightRng: any;
 }
 
 class BuildCommand {
@@ -89,7 +91,7 @@ class LotSide {
     this.deltaY = this.endY - this.startY;
 
     let pole = vec3.fromValues(0, 1, 0);
-    let p = vec3.fromValues(end[0] - start[0], 0, end[1] - start[1]);
+    let p = vec3.fromValues(this.endX - this.startX, 0, this.endY - this.startY);
 
     this.sideNormal  = vec3.create();
     vec3.cross(this.sideNormal, pole, p);
@@ -98,13 +100,84 @@ class LotSide {
 
     this.config = config;
   }
+
+  scale(value: number) {
+    this.startX = this.startX  * value;
+    this.startY = this.startY * value;
+
+    this.endX = this.endX * value;
+    this.endY = this.endY * value;
+
+    this.deltaX = this.endX - this.startX;
+    this.deltaY = this.endY - this.startY;
+
+    let pole = vec3.fromValues(0, 1, 0);
+    let p = vec3.fromValues(this.endX - this.startX, 0, this.endY - this.startY);
+
+    this.sideNormal  = vec3.create();
+    vec3.cross(this.sideNormal, pole, p);
+
+    vec3.normalize(this.sideNormal, this.sideNormal);
+  }
 }
 
 class Lot {
   sides: Array<LotSide>;
+  type: string;
+  name: string;
 
   constructor() {
     this.sides = new Array<LotSide>();
+    this.type = "FIXED";
+    this.name = "Unknown Lot";
+  }
+
+  private getRNG(config: any) {
+    let returnValue;
+    let seed = config.seed ? config.seed : 1723;
+
+    logTrace('Getting RNG for Config', config);
+
+    if (config.type.toUpperCase() == "WEIGHTEDRNG") {
+      returnValue = new WeightedRNG(seed);
+
+      for (var key in config.val) {
+        returnValue.add(key, config.val[key]);
+      }
+    }
+    else if (config.type.toUpperCase() == "RNG") {
+      returnValue = new RNG(seed, config.min, config.max);
+    }
+    else {
+      // Twitch Emote Just FYI
+      logError(`${this.name} Unsupported RNG Detected, BlessRNG _/\\_`);
+    }
+
+    return returnValue;
+  }
+
+  load(config: any) {    
+    let defaultConfig = new LotConfig();
+    defaultConfig.type = "pattern";
+    defaultConfig.mode = "repeat";
+    defaultConfig.input = "W";
+    defaultConfig.separator = "*";
+    defaultConfig.rng = this.getRNG({
+      seed: 213,
+      type: 'RNG',
+      min: 3,
+      max: 5
+    });
+
+    for (var itr = 0; itr < config.sides.length; ++itr) {
+      let side = config.sides[itr];
+
+      let lotSide = new LotSide(side.start, side.end, side.config || defaultConfig);
+      this.sides.push(lotSide);
+    }
+
+    this.name = config.name;
+    this.type = config.type;
   }
 }
 
@@ -113,13 +186,22 @@ class BuildingComponent {
   width: number;
 }
 
+class BuildingContext {
+  wallComponent: any;
+  windowComponent: any;
+  floorCount: number;
+  floorHeight: number;
+  floorType: string;
+  rootTranslation: vec4;
+  overallTranslation: vec4;
+}
+
 class Building {
   components: any;
   config: any;
   name: string;
   grammar: ShapeGrammar;
-
-  lot: Lot;
+  context : BuildingContext;
 
   defaultWallConstraint: WallConstraint;
   defaultFloorConstraint: FloorConstraint;
@@ -129,7 +211,6 @@ class Building {
     this.components = components;
     this.name = config.name;
     this.grammar = new ShapeGrammar();
-    this.lot = new Lot();
 
     this.loadConfig(config);
   }
@@ -191,32 +272,9 @@ class Building {
   private loadFloors(config: any) {
     let constraint = new FloorConstraint();
     constraint.rng = this.getRNG(config.rng);
+    constraint.typeRng = this.getRNG(config.type.rng);
+    constraint.heightRng = this.getRNG(config.height.rng);
     this.defaultFloorConstraint = constraint;
-  }
-
-  private loadLot(config: any) {
-    let lot = new Lot();
-    
-    let defaultConfig = new LotConfig();
-    defaultConfig.type = "pattern";
-    defaultConfig.mode = "repeat";
-    defaultConfig.input = "W";
-    defaultConfig.separator = "*";
-    defaultConfig.rng = this.getRNG({
-      seed: 213,
-      type: 'RNG',
-      min: 3,
-      max: 5
-    });
-
-    for (var itr = 0; itr < config.sides.length; ++itr) {
-      let side = config.sides[itr];
-
-      let lotSide = new LotSide(side.start, side.end, side.config || defaultConfig);
-      lot.sides.push(lotSide);
-    }
-
-    this.lot = lot;
   }
 
   loadConfig(config: any) {
@@ -236,7 +294,6 @@ class Building {
 
     this.loadWalls(config.walls);
     this.loadFloors(config.floors);
-    this.loadLot(config.lot);
 
     logTrace(`${this.name} Loaded Config Successfully`);
   }
@@ -314,25 +371,25 @@ class Building {
     return commands;
   }
 
-  construct() {
-
-    let floors = Math.round(this.defaultFloorConstraint.rng.roll());
-
-    let selectedWallComp = this.components.WallComponent1;
-
-    let windows:any = [];
-
-    // Pre Build Per Side Configuration
-    for (var itr = 0; itr < this.lot.sides.length; ++itr) {
-
-    }
+  constructLot(lotGenerateConfig: any) {
+    let lot = lotGenerateConfig.lot;
+    let lotScale = lotGenerateConfig.localScale;
 
     let xAxis = vec3.fromValues(1, 0, 0);
 
-    for (var itr = 0; itr < this.lot.sides.length; ++itr) {
-      let side = this.lot.sides[itr];
+    let floorCount = this.context.floorCount;
+    let floorHeight = this.context.floorHeight;
 
-      let cmds = this.getBuildCommandsForSide(side, null, selectedWallComp);
+    if (this.context.floorType == "RANDOM_ACROSS_LOTS") {
+      floorCount = Math.round(this.defaultFloorConstraint.rng.roll());
+      floorHeight = Math.round(this.defaultFloorConstraint.heightRng.roll());
+    }
+
+    for (var itr = 0; itr < lot.sides.length; ++itr) {
+      let side = Object.create(lot.sides[itr]);
+      side.scale(lotScale);
+
+      let cmds = this.getBuildCommandsForSide(side, null, this.context.wallComponent);
 
       logTrace('Got Build Commands for Side: ', cmds);
 
@@ -350,7 +407,7 @@ class Building {
       vec3.normalize(axis, axis);
 
       let scale = vec3.fromValues(1, 1, 1);
-      let translate = vec4.fromValues(side.startX, 0, side.startY, 1);
+
       let quat = axisAngleToQuaternion(axis, angle);
 
       let rotationModel = mat4.create();
@@ -377,56 +434,88 @@ class Building {
         scale[2] = -scale[2];
       }
 
-      for (var cmdItr = 0; cmdItr < cmds.length; ++cmdItr) {
-        let cmd = cmds[cmdItr];
+      for (var floorIdx = 0; floorIdx < floorCount; ++floorIdx) {
+        let floorY = floorHeight * floorIdx;
+        let wallYScale = floorHeight / 3.0; // Todo: take from Component
 
-        if (cmd.type == "wall") {
-          let localScale = vec3.create();
-          vec3.copy(localScale, scale);
+        let translate = vec4.fromValues(side.startX, 0, side.startY, 1);
+        vec4.add(translate, translate, this.context.overallTranslation);
+        vec4.add(translate, translate, vec4.fromValues(0,floorY,0, 0));
 
-          localScale[0] *= cmd.width;
+        for (var cmdItr = 0; cmdItr < cmds.length; ++cmdItr) {
+          let cmd = cmds[cmdItr];
 
-          logTrace('Comp Instance Values: ', translate, quat, localScale);
-          selectedWallComp.instance.addInstance(translate, quat, localScale);
-        }
-        else if (cmd.type == "translate") {
-          let widthDirection = vec3.create();
-          vec3.scale(widthDirection, direction, cmd.width)
-          vec4.add(translate, translate, vec4.fromValues(widthDirection[0], widthDirection[1], widthDirection[2], 0));
+          if (cmd.type == "wall") {
+            let localScale = vec3.create();
+            vec3.copy(localScale, scale);
 
-          logTrace(`New Translation: ${translate[0]}, ${translate[1]}, ${translate[2]}`);
-        }
-        else if (cmd.type == "window") {
-          let localScale = vec3.create();
-          vec3.copy(localScale, scale);
+            localScale[0] *= cmd.width;
+            localScale[1] = wallYScale;
 
-          localScale[0] *= cmd.width;
+            logTrace('Comp Instance Values: ', translate, quat, localScale);
+            this.context.wallComponent.instance.addInstance(translate, quat, localScale);
+          }
+          else if (cmd.type == "translate") {
+            let widthDirection = vec3.create();
+            vec3.scale(widthDirection, direction, cmd.width)
+            vec4.add(translate, translate, vec4.fromValues(widthDirection[0], widthDirection[1], widthDirection[2], 0));
 
-          let localTranslate = vec4.create();
-          vec4.add(localTranslate, translate, sideNormalVec4);
+            logTrace(`New Translation: ${translate[0]}, ${translate[1]}, ${translate[2]}`);
+          }
+          else if (cmd.type == "window") {
+            let localScale = vec3.create();
+            vec3.copy(localScale, scale);
 
-          logTrace('Window Instance Values: ', localTranslate, quat, localScale);
-          selectedWallComp.instance.addInstance(localTranslate, quat, localScale);
+            localScale[0] *= cmd.width;
+            localScale[1] = wallYScale;
+            localScale[2] *= -1;
 
-          let widthDirection = vec3.create();
-          vec3.scale(widthDirection, direction, cmd.width)
-          vec4.add(translate, translate, vec4.fromValues(widthDirection[0], widthDirection[1], widthDirection[2], 0));
+            let localTranslate = vec4.create();
+            vec4.add(localTranslate, translate, sideNormalVec4);
+
+            logTrace('Window Instance Values: ', translate, quat, localScale);
+            this.context.windowComponent.instance.addInstance(translate, quat, localScale);
+
+            let widthDirection = vec3.create();
+            vec3.scale(widthDirection, direction, cmd.width)
+            vec4.add(translate, translate, vec4.fromValues(widthDirection[0], widthDirection[1], widthDirection[2], 0));
+          }
         }
       }
     }
+  }
 
-    // for (var i = 0; i < mX; ++i) {
-    //   this.components.WallComponent1.instance.addInstance(vec4.fromValues(i,0,0,1), vec4.fromValues(0,0,0,1), vec3.fromValues(1,1,1));
-    //   this.components.WallComponent1.instance.addInstance(vec4.fromValues(i,0,mY,1), vec4.fromValues(0,0,0,1), vec3.fromValues(1,1,1)); 
-    // }
+  construct(rootTranslation: vec4, shapeGrammar: any) {
+    this.context = new BuildingContext();
+    this.context.wallComponent = this.components.WallComponent1;
+    this.context.windowComponent = this.components.WindowComponent1;
+    this.context.rootTranslation = rootTranslation;
 
-    // for (var i = 0; i < mY; ++i) {
-    //   this.components.WallComponent1.instance.addInstance(vec4.fromValues(0,0,i,1), vec4.fromValues(0, -0.707, 0, 0.707), vec3.fromValues(1,1,1));
-    //   this.components.WallComponent1.instance.addInstance(vec4.fromValues(mX,0,i,1), vec4.fromValues(0, -0.707, 0, 0.707), vec3.fromValues(1,1,1));
-    // }
+    this.context.floorCount = Math.round(this.defaultFloorConstraint.rng.roll());
+    this.context.floorType = this.defaultFloorConstraint.typeRng.roll();
+    this.context.floorHeight = Math.round(this.defaultFloorConstraint.heightRng.roll());
+
+    let generatedLots = shapeGrammar.construct(3);
+
+    for (var itr = 0; itr < generatedLots.length; ++itr) {
+      let obj = generatedLots[itr];
+
+      let scaledLocal = vec4.create();
+      scaledLocal[0] = obj.localTranslation[0] * obj.localScale;
+      scaledLocal[1] = obj.localTranslation[1] * obj.localScale;
+      scaledLocal[2] = obj.localTranslation[2] * obj.localScale;
+      scaledLocal[3] = 0;
+
+      this.context.overallTranslation = vec4.create();
+      vec4.add(this.context.overallTranslation, rootTranslation, scaledLocal);
+
+      logTrace(`Overall Translation for Lot:`, this.context.overallTranslation);
+
+      this.constructLot(obj);
+    }
   }
 }
 
-export {Building, BuildingComponent};
+export {Building, BuildingComponent, Lot};
 
 export default Building;

@@ -432,6 +432,10 @@ class ShaderProgram {
     if (this.attrVertPos != -1) gl.disableVertexAttribArray(this.attrVertPos);
     if (this.attrNor != -1) gl.disableVertexAttribArray(this.attrNor);
     if (this.attrInstancePos != -1) gl.disableVertexAttribArray(this.attrInstancePos);
+    if (this.attrInstanceRotation != -1) gl.disableVertexAttribArray(this.attrInstanceRotation);
+    if (this.attrInstanceScale != -1) gl.disableVertexAttribArray(this.attrInstanceScale);
+    if (this.attrNor != -1) gl.disableVertexAttribArray(this.attrNor);
+    if (this.attrCol != -1) gl.disableVertexAttribArray(this.attrCol);
   }
 };
 

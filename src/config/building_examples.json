@@ -41,6 +41,7 @@
       }
     },
     "lot": {
+      "type": "FIXED",
       "sides": [{
         "start": [0, 0],
         "end": [30, 0]

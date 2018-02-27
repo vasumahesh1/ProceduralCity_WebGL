@@ -22,9 +22,6 @@ out vec4 out_Col;
 
 void main() {
 
-  out_Col = vec4(1,0,0,1);
-  return;
-
   // Material base color (before shading)
   vec4 diffuseColor = fs_Col;
   float alpha = diffuseColor.a;
@@ -38,14 +35,14 @@ void main() {
 
   float specularTerm = 0.0;
 
-  if (diffuseTerm > 0.0 && fs_Spec > 0.0) {
-    /*----------  Blinn Phong  ----------*/
-    vec4 viewVec = u_Eye - fs_Pos;
-    vec4 lightVec = fs_LightVec - fs_Pos;
+  // if (diffuseTerm > 0.0 && fs_Spec > 0.0) {
+  //   /*----------  Blinn Phong  ----------*/
+  //   vec4 viewVec = u_Eye - fs_Pos;
+  //   vec4 lightVec = fs_LightVec - fs_Pos;
 
-    vec4 H = normalize((viewVec + lightVec) / 2.0f);
-    specularTerm = max(pow(dot(H, normalize(fs_Nor)), fs_Spec), 0.0);
-  }
+  //   vec4 H = normalize((viewVec + lightVec) / 2.0f);
+  //   specularTerm = max(pow(dot(H, normalize(fs_Nor)), fs_Spec), 0.0);
+  // }
 
   float lightIntensity =
       ambientTerm + (diffuseTerm + specularTerm);

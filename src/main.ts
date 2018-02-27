@@ -14,12 +14,14 @@ import Camera from './Camera';
 import { setGL } from './globals';
 import { ShaderControls, WaterControls } from './rendering/gl/ShaderControls';
 import ShaderProgram, { Shader } from './rendering/gl/ShaderProgram';
-import { Building, BuildingComponent } from './core/shape_grammer/Building';
+import { Building, BuildingComponent, Lot } from './core/shape_grammer/Building';
 import AssetLibrary from './core/utils/AssetLibrary';
 import WeightedRNG from './core/rng/WeightedRNG';
+import LSystemShapeGrammar from './lsystems/LSystemShapeGrammar';
 
 var baseBuildingConfig = require('./config/buildings.json');
 var baseBuildingComps = require('./config/building_comps.json');
+var baseLots = require('./config/lots.json');
 
 localStorage.debug = 'mainApp:*:info*,mainApp:*:error*,mainApp:*:trace*';
 
@@ -31,6 +33,9 @@ var logError = Logger("mainApp:main:error");
 
 let meshInstances: { [symbol: string]: MeshInstanced; } = { };
 let buildingComps: { [symbol: string]: BuildingComponent; } = { };
+let lotsMap: { [symbol: string]: Lot; } = { };
+
+let shapeGrammarSystem = new LSystemShapeGrammar(546);
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -145,6 +150,15 @@ function loadAssets() {
     assets[comp.name] = comp.url;
   }
 
+  for (let itr = 0; itr < baseLots.lots.length; ++itr) {
+    let lotData = baseLots.lots[itr];
+    let lot = new Lot();
+    lot.load(lotData);
+    lotsMap[lotData.name] = lot;
+  }
+
+  shapeGrammarSystem.addScope('lotsMap', lotsMap);
+
   assetLibrary.load(assets)
     .then(function() {
       logTrace('Loaded Asssets', assetLibrary);
@@ -167,7 +181,7 @@ function loadAssets() {
       for (let itr = 0; itr < baseBuildingConfig.buildings.length; ++itr) {
         let building = baseBuildingConfig.buildings[itr];
         testBuilding = new Building(building, buildingComps);
-        testBuilding.construct();
+        testBuilding.construct(vec4.fromValues(0,0,0,1), shapeGrammarSystem);
       }
 
       for(let key in meshInstances) {
@@ -455,7 +469,7 @@ function main() {
 
   // Initial call to load scene
 
-  const camera = new Camera(vec3.fromValues(30, 30, 30), vec3.fromValues(0, 0, 0));
+  const camera = new Camera(vec3.fromValues(75, 75, 75), vec3.fromValues(0, 0, 0));
 
   const renderer = new OpenGLRenderer(canvas);
   renderer.setClearColor(0.05, 0.05, 0.05, 1);

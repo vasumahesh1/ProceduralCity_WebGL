@@ -27,8 +27,26 @@
       "rng": {
         "seed": 213,
         "type": "RNG",
-        "min": 3,
-        "max": 5
+        "min": 7,
+        "max": 12
+      },
+      "type": {
+        "rng": {
+          "seed": 123,
+          "type": "WeightedRNG",
+          "val": {
+            "SAME_ACROSS_LOTS": 10,
+            "RANDOM_ACROSS_LOTS": 2
+          }
+        }
+      },
+      "height": {
+        "rng": {
+          "seed": 213,
+          "type": "RNG",
+          "min": 3,
+          "max": 6
+        }
       }
     },
     "constraints": {
@@ -41,6 +59,7 @@
       }
     },
     "lot": {
+      "type": "FIXED",
       "sides": [{
         "start": [0, 0],
         "end": [30, 0]
