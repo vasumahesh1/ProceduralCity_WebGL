@@ -27,7 +27,7 @@ void main() {
   float alpha = diffuseColor.a;
 
   /*----------  Ambient  ----------*/
-  float ambientTerm = 0.1;
+  float ambientTerm = 0.3;
 
   /*----------  Lambertian  ----------*/
   float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
