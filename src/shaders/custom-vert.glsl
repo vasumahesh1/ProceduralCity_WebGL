@@ -7,6 +7,7 @@ uniform mat4 u_Model;
 uniform mat4 u_ModelInvTr;
 uniform mat4 u_ViewProj;
 uniform mat4 u_LightSpaceMatrix;
+uniform mat4 u_GlobalTransform;
 uniform int u_Time;
 uniform vec3 u_LightPos;
 uniform vec4 u_Eye;
@@ -66,18 +67,18 @@ void main() {
   vec4 vertexColor;
   vec4 vertexPosition = vs_Pos;
   vec4 vertexNormal = vs_Nor;
-  // mat4 instanceModel = u_InstanceModel[gl_InstanceID];
+  vec4 vertexScale = vs_InstScale;
 
   fs_Col = vec4(64,21,15, 255) / 255.0;
 
-  vertexNormal = vertexNormal * vec4(1.0 / vs_InstScale.x, 1.0 / vs_InstScale.y, 1.0 / vs_InstScale.z, 0.0);
+  vertexNormal = vertexNormal * vec4(1.0 / vertexScale.x, 1.0 / vertexScale.y, 1.0 / vertexScale.z, 0.0);
   vertexNormal = rotateByQuat(vertexNormal, vs_InstRotation);
 
   // mat3 invTranspose = inverse(mat3(instanceModel));
   fs_Nor = normalize(vertexNormal); // vec4(invTranspose * vec3(vertexNormal), 0);
 
   vec4 modelposition = u_Model * vertexPosition;
-  modelposition = vs_InstScale * vertexPosition;
+  modelposition = vertexScale * vertexPosition;
   modelposition = rotateByQuat(modelposition, vs_InstRotation);
   modelposition += vs_InstPos;
 

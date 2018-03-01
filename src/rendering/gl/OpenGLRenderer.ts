@@ -38,6 +38,9 @@ class OpenGLRenderer {
 
     let invProj = mat4.create();
     let invView = mat4.create();
+    let globalTransform = mat4.create();
+
+    mat4.fromScaling(globalTransform, vec3.fromValues(3,3,3))
 
     let color = this.geometryColor;
 
@@ -54,6 +57,7 @@ class OpenGLRenderer {
     prog.setGeometryColor(color);
     prog.setInvViewProjMatrix(invViewProj);
     prog.setScreenDimensions(vec2.fromValues(this.canvas.width, this.canvas.height));
+    prog.setGlobalTransfrom(globalTransform);
 
     for (let drawable of drawables) {
       prog.setModelMatrix(drawable.modelMatrix);

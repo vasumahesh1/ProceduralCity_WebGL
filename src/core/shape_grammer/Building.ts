@@ -8,6 +8,8 @@ var Logger = require('debug');
 var logTrace = Logger("mainApp:building:trace");
 var logError = Logger("mainApp:building:error");
 
+const ROOT_TWO = 1.414213562;
+
 function axisAngleToQuaternion(axis: vec3, angle: number) {
   let quat = vec4.create();
   let cos = Math.cos(angle / 2.0);
@@ -194,6 +196,81 @@ class BuildingContext {
   floorType: string;
   rootTranslation: vec4;
   overallTranslation: vec4;
+}
+
+class Property {
+  center: vec3;
+  centerVec4: vec4;
+  sideLength: number;
+  radius: number;
+
+  constructor (sideLength: number) {
+    this.sideLength = sideLength;
+    this.radius = (sideLength * 0.5 * ROOT_TWO);
+    this.center = vec3.create();
+  }
+
+  checkOverlap(property: Property) {
+    let dist = vec3.create();
+    vec3.subtract(dist, this.center, property.center);
+    let distVal = vec3.length(dist);
+    let distSq = distVal * distVal;
+    let radiusVal = this.radius + property.radius;
+    let radiusSq = radiusVal * radiusVal;
+
+    return distSq < radiusSq;
+  }
+
+  setCenter(value: vec3) {
+    this.center = value;
+    this.centerVec4 = vec4.fromValues(value[0], value[1], value[2], 1);
+  }
+
+  getEdgeVertex() {
+    let edgeVertex = vec4.create();
+    let diff = this.sideLength / 2.0;
+
+    let diffVector = vec4.fromValues(diff, 0, diff, 0);
+    let result = vec4.create();
+    vec4.subtract(result, this.centerVec4, diffVector);
+    return result;
+  }
+}
+
+class GenerationConstraint {
+  population: any;
+  landValue: any;
+
+  constructor () {
+    this.population = {};
+    this.landValue = {};
+  }
+
+  setPopulation(min: number, max: number) {
+    this.population = {
+      min: min,
+      max: max
+    };
+  }
+
+  setLandValue(min: number, max: number) {
+    this.landValue = {
+      min: min,
+      max: max
+    };
+  }
+
+  isValid(data: any) {
+    if (data.population < this.population.min || data.population > this.population.max) {
+      return false;
+    }
+
+    if (data.landValue < this.population.min || data.landValue > this.population.max) {
+      return false;
+    }
+
+    return true;
+  }
 }
 
 class Building {
@@ -505,7 +582,7 @@ class Building {
     }
   }
 
-  construct(rootTranslation: vec4, shapeGrammar: any) {
+  construct(rootTranslation: vec4, shapeGrammar: any, generationConstraint: any, property: Property) {
     this.context = new BuildingContext();
     this.context.wallComponent = this.components.WallComponent1;
     this.context.windowComponent = this.components.WindowComponent1;
@@ -515,7 +592,8 @@ class Building {
     this.context.floorType = this.defaultFloorConstraint.typeRng.roll();
     this.context.floorHeight = Math.round(this.defaultFloorConstraint.heightRng.roll());
 
-    let generatedLots = shapeGrammar.construct(3);
+    shapeGrammar.addScope('property', property);
+    let generatedLots = shapeGrammar.construct(3, generationConstraint);
 
     for (var itr = 0; itr < generatedLots.length; ++itr) {
       let obj = generatedLots[itr];
@@ -536,6 +614,6 @@ class Building {
   }
 }
 
-export {Building, BuildingComponent, Lot};
+export {Building, BuildingComponent, Lot, Property, GenerationConstraint};
 
 export default Building;

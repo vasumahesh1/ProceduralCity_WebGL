@@ -10,8 +10,14 @@ let Noise = require('noisejs').Noise;
 
 var Logger = require('debug');
 var dTransform = Logger("lsystem:trace:transform");
-var dStack = Logger("lsystem:trace:stack");
+var logTrace = Logger("lsystem:trace:stack");
 var dConstruct = Logger("lsystem:trace:construction");
+
+var logTrace = Logger("mainApp:CoreLSystem:info");
+var logError = Logger("mainApp:CoreLSystem:error");
+
+const cachedNoise = require('../../config/noise.json');
+const simplexNoise = cachedNoise['simplex2d'];
 
 class LSystemSymbol {
   value: string;
@@ -41,9 +47,12 @@ class LSystemRule {
   source: string;
   expr: string;
 
-  constructor(src: string, exp: string) {
+  canExtend: any;
+
+  constructor(src: string, exp: string, extendFn: any) {
     this.source = src;
     this.expr = exp;
+    this.canExtend = extendFn;
   }
 
   setWeight(value: number) {
@@ -60,6 +69,11 @@ class LSystemRule {
     this.expr = value;
     return this;
   }  
+
+  setCanExtend(extendFn: any) {
+    this.canExtend = extendFn;
+    return this;
+  }
 };
 
 class LSystemRuleSet {
@@ -71,13 +85,13 @@ class LSystemRuleSet {
     this.totalWeight = 0.0;
   }
 
-  addRule(src: string, exp: string) {
-    this.rules.push(new LSystemRule(src, exp));
+  addRule(src: string, exp: string, extendFn: any) {
+    this.rules.push(new LSystemRule(src, exp, extendFn));
     this.totalWeight += 1.0;
   }
 
-  addWeightedRule(src: string, exp: string, weight: number) {
-    this.rules.push(new LSystemRule(src, exp).setWeight(weight));
+  addWeightedRule(src: string, exp: string, weight: number, extendFn: any) {
+    this.rules.push(new LSystemRule(src, exp, extendFn).setWeight(weight));
     this.totalWeight += weight;
   }
 }
@@ -89,6 +103,7 @@ class LSystemExecutionScope {
   itr: number;
   depth: number;
   maxDepth: number;
+  ruleData: any;
   rootString: Array<string>;
   stack: Stack<LSystemStackEntry>;
   turtle: LSystemTurtle;
@@ -107,13 +122,13 @@ class LSystemExecutionScope {
   opSaveState() {
     let stackEntry = new LSystemStackEntry(this.turtle);
     this.stack.push(stackEntry);
-    dStack(`Saving State (${this.turtle.position[0]}, ${this.turtle.position[1]}, ${this.turtle.position[2]})`);
+    logTrace(`Saving State (${this.turtle.position[0]}, ${this.turtle.position[1]}, ${this.turtle.position[2]})`);
   }
 
   opRestoreState() {
     let stackEntry = this.stack.pop();
     this.turtle = LSystemTurtle.fromExisting(stackEntry.turtle);
-    dStack(`Restoring State (${this.turtle.position[0]}, ${this.turtle.position[1]}, ${this.turtle.position[2]})`);
+    logTrace(`Restoring State (${this.turtle.position[0]}, ${this.turtle.position[1]}, ${this.turtle.position[2]})`);
   }
 };
 
@@ -180,6 +195,7 @@ class LSystem {
   maxDepth: number;
   noiseGen: any;
   rootString: Array<string>;
+  axiom: string;
 
   constructor(seed: number) {
     this.seed = seed;
@@ -204,6 +220,8 @@ class LSystem {
       this.rootString.push(value[i]);
     }
 
+    this.axiom = value;
+
     return this;
   }
 
@@ -212,27 +230,27 @@ class LSystem {
     return this;
   }
 
-  addRule(src: string, exp: string) {
+  addRule(src: string, exp: string, extendFn?: any) {
     if (!this.rules[src]) {
       this.rules[src] = new LSystemRuleSet();
     }
 
-    this.rules[src].addRule(src, exp);
+    this.rules[src].addRule(src, exp, extendFn);
 
     return this;
   }
 
-  addWeightedRule(src: string, exp: string, weight: number) {
+  addWeightedRule(src: string, exp: string, weight: number, extendFn?: any) {
     if (!this.rules[src]) {
       this.rules[src] = new LSystemRuleSet();
     }
 
-    this.rules[src].addWeightedRule(src, exp, weight);
+    this.rules[src].addWeightedRule(src, exp, weight, extendFn);
 
     return this;
   }
 
-  selectRule(ruleSet: LSystemRuleSet, stringItr: number, itr: number) {
+  selectRule(ruleSet: LSystemRuleSet, stringItr: number, itr: number, generationConstraint: any) {
     let totalWeight = ruleSet.totalWeight;
     let progress = 0.0;
 
@@ -240,25 +258,55 @@ class LSystem {
       return ruleSet.rules[0];
     }
 
-    let noise = this.noiseGen.simplex2(this.seed * stringItr * 13, this.seed * itr * 29);
+    let tries = 10;
+    let selectedRule = null;
 
-    let ruleIdx: number;
-    let random = noise * totalWeight;
+    while(tries >= 0) {
 
-    for (var itr = 0; itr < ruleSet.rules.length; ++itr) {
-      let rule = ruleSet.rules[itr];
-      progress += rule.weight;
+      let noise = this.noiseGen.simplex2(this.seed * stringItr * 13, this.seed * itr * 29);
 
-      if (progress > random) {
-        ruleIdx = itr;
-        break;
+      noise = (noise + 1.0) / 2.0;
+
+      let ruleIdx: number = -1;
+      let random = Math.random() * totalWeight;
+
+      for (var itr = 0; itr < ruleSet.rules.length; ++itr) {
+        let rule = ruleSet.rules[itr];
+        progress += rule.weight;
+
+        if (progress > random) {
+          ruleIdx = itr;
+          break;
+        }
       }
+
+      if (ruleIdx >= 0) {
+        selectedRule = ruleSet.rules[ruleIdx];
+
+        if (selectedRule.canExtend && selectedRule.canExtend(generationConstraint)) {
+          break;
+        } else if (!selectedRule.canExtend) {
+          break;
+        } else {
+          selectedRule = null;
+        }
+      }
+
+      tries--;
     }
 
-    return ruleSet.rules[ruleIdx];
+    if (!selectedRule) {
+      logError('LSystem Failed to Get a Valid Rule for your Productions. Please Check.', ruleSet);
+      logError('Defaulting to 0th Index');
+      selectedRule = ruleSet.rules[0];
+    }
+
+    return selectedRule;
   }
 
-  construct(iterations: number) {
+  construct(iterations: number, generationConstraint?: any) {
+    this.setAxiom(this.axiom);
+
     let current = this.rootString;
 
     for (let itr = iterations - 1; itr >= 0; --itr) {
@@ -274,7 +322,7 @@ class LSystem {
 
         current.splice(stringItr, 1);
 
-        let rule = this.selectRule(symbolRuleSet, stringItr, itr);
+        let rule = this.selectRule(symbolRuleSet, stringItr, itr, generationConstraint);
 
         for(let i = 0; i < rule.expr.length; ++i) {
           current.splice(stringItr + i, 0, rule.expr[i]);
@@ -321,13 +369,39 @@ class LSystem {
       let symbol = rootString[this.execScope.itr];
       let symbolData = this.map[symbol];
 
+      let symbolNext = rootString[this.execScope.itr + 1];
+
       if (!symbolData) {
         continue;
+      }
+
+      let skip = 0;
+      let extractedValue = '';
+
+      this.execScope.ruleData = null;
+
+      if (symbolNext == '{') {
+        let startItr = this.execScope.itr + 2;
+        let valItr = startItr;
+        for (; valItr < rootString.length; ++valItr) {
+          let str = rootString[valItr];
+          if (str == '}') {
+            break;
+          }
+
+          extractedValue += str;
+        }
+
+        skip = valItr - startItr + 1;
+
+        this.execScope.ruleData = extractedValue.split(',');
       }
 
       if (symbolData.onProcess) {
         symbolData.onProcess.apply(this.execScope, symbolData.args);
       }
+
+      this.execScope.itr += skip;
     }
   }
 };

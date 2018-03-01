@@ -1,6 +1,6 @@
 {
   "buildings": [{
-    "name": "Building 1",
+    "name": "Building Blueprint 1",
     "selectionWeight": 100,
     "walls": [{
       "rng": {
@@ -25,7 +25,7 @@
     }],
     "floors": {
       "rng": {
-        "seed": 213,
+        "seed": 3,
         "type": "RNG",
         "min": 7,
         "max": 12
@@ -35,7 +35,6 @@
           "seed": 123,
           "type": "WeightedRNG",
           "val": {
-            "SAME_ACROSS_LOTS": 10,
             "RANDOM_ACROSS_LOTS": 2
           }
         }
@@ -50,13 +49,9 @@
       }
     },
     "constraints": {
-      "populationDensity": "high",
-      "wallHeight": {
-        "seed": 1343,
-        "type": "RNG",
-        "min": 3,
-        "max": 5
-      }
+      "population": 0.6,
+      "landValue": 0.0,
+      "grammarControlsFloors": false
     }
   }]
 }

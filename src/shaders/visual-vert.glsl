@@ -36,7 +36,7 @@ void main() {
 
   fs_Col = vec4(1, 1, 1, 1);
 
-  vec4 modelposition = u_Model * vertexPosition;
+  vec4 modelposition = vertexPosition * vec4(0.5, 0.5, 0.5, 1.0);
 
   gl_Position = u_ViewProj * modelposition;
 }

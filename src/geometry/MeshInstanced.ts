@@ -47,6 +47,10 @@ class MeshInstanced extends Drawable {
   rotations: Float32Array;
   uvs: Float32Array;
 
+  instancePosition: Array<number>;
+  instanceScale: Array<number>;
+  instanceRotation: Array<number>;
+
   baseColor: vec4;
   uvOffset: vec2;
   uvScale: number;
@@ -61,6 +65,10 @@ class MeshInstanced extends Drawable {
 
     this.instances = 0;
     this.baseColor = vec4.fromValues(1,1,1,1);
+
+    this.instancePosition = new Array<number>();
+    this.instanceScale = new Array<number>();
+    this.instanceRotation = new Array<number>();
 
     this.positions = new Float32Array([]);
     this.scales = new Float32Array([]);
@@ -89,32 +97,9 @@ class MeshInstanced extends Drawable {
 
   addInstance(position: vec4, orient: vec4, scale: vec3) {
 
-    let arr =  new Float32Array([
-      position[0],
-      position[1],
-      position[2],
-      position[3]
-    ]);
-
-    this.positions = concatFloat32Array(this.positions, arr);
-
-    arr =  new Float32Array([
-      scale[0],
-      scale[1],
-      scale[2],
-      0.0
-    ]);
-
-    this.scales = concatFloat32Array(this.scales, arr);
-
-    arr =  new Float32Array([
-      orient[0],
-      orient[1],
-      orient[2],
-      orient[3]
-    ]);
-
-    this.rotations = concatFloat32Array(this.rotations, arr);
+    this.instancePosition.push(position[0], position[1], position[2], position[3]);
+    this.instanceScale.push(scale[0], scale[1], scale[2], 0.0);
+    this.instanceRotation.push(orient[0], orient[1], orient[2], orient[3]);
 
     this.instances++;
   }
@@ -172,6 +157,10 @@ class MeshInstanced extends Drawable {
       this.colors = concatFloat32Array(this.colors, colorArr);
       this.uvs = concatFloat32Array(this.uvs, arrUV);
     }
+
+    this.positions = new Float32Array(this.instancePosition);
+    this.rotations = new Float32Array(this.instanceRotation);
+    this.scales = new Float32Array(this.instanceScale);
 
     this.indices = new Uint32Array(indices);
 

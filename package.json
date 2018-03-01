@@ -24,6 +24,7 @@
     "k-d-tree": "^1.0.1",
     "noisejs": "^2.1.0",
     "obj-mtl-loader": "0.0.5",
+    "paralleljs": "^0.2.1",
     "stats-js": "^1.0.0-alpha1",
     "webgl-obj-loader": "^1.0.0"
   }

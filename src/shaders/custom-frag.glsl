@@ -19,6 +19,7 @@ void main() {
   // Material base color (before shading)
   // vec4 diffuseColor = fs_Col;
   vec4 diffuseColor = texture(u_Texture, fs_UV);
+
   float alpha = diffuseColor.a;
 
   /*----------  Ambient  ----------*/

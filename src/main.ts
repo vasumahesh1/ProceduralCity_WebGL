@@ -15,15 +15,16 @@ import { setGL } from './globals';
 import { ShaderControls, WaterControls } from './rendering/gl/ShaderControls';
 import ShaderProgram, { Shader } from './rendering/gl/ShaderProgram';
 import { Building, BuildingComponent, Lot } from './core/shape_grammer/Building';
+import CityGenerator from './core/shape_grammer/CityGenerator';
 import AssetLibrary from './core/utils/AssetLibrary';
 import WeightedRNG from './core/rng/WeightedRNG';
 import LSystemShapeGrammar from './lsystems/LSystemShapeGrammar';
 
-var baseBuildingConfig = require('./config/buildings.json');
+var buildingBlueprints = require('./config/buildings.json');
 var baseBuildingComps = require('./config/building_comps.json');
 var baseLots = require('./config/lots.json');
 
-localStorage.debug = 'mainApp:*:info*,mainApp:*:error*,mainApp:*:trace*';
+localStorage.debug = 'mainApp:*:info*,mainApp:*:error*'; // ,mainApp:*:trace*';
 
 var Logger = require('debug');
 var logTrace = Logger("mainApp:main:trace");
@@ -84,6 +85,7 @@ let FlagIsRenderable: boolean = false;
 let boundingLines: Line;
 let sky: Sky;
 let plane: NoisePlane;
+let generator: CityGenerator;
 
 let shaderControls: ShaderControls;
 
@@ -112,7 +114,7 @@ function toggleLeaves() {
 /**
  * @brief      Loads the geometry assets
  */
-function loadAssets() {
+function loadAssets(callback?: any) {
   FlagIsRenderable = false;
   if (boundingLines) {
     boundingLines.destory();
@@ -126,7 +128,7 @@ function loadAssets() {
     sky.destory();
   }
 
-  plane = new NoisePlane(500, 500, 75, 75, 8123);
+  plane = new NoisePlane(400, 400, 75, 75, 8123);
   plane.create();
 
   boundingLines = new Line();
@@ -161,6 +163,8 @@ function loadAssets() {
     lotsMap[lotData.name] = lot;
   }
 
+  generator = new CityGenerator(controls.seed);
+
   shapeGrammarSystem.addScope('lotsMap', lotsMap);
 
   assetLibrary.load(assets)
@@ -177,7 +181,7 @@ function loadAssets() {
         meshInstances[comp.name].uvScale = uvScale;
       }
 
-      logTrace('MeshInstances are:', meshInstances);
+      logTrace('Loaded MeshInstances are:', meshInstances);
 
       for (let itr = 0; itr < baseBuildingComps.components.length; ++itr) {
         let comp = baseBuildingComps.components[itr];
@@ -187,11 +191,16 @@ function loadAssets() {
         buildingComps[comp.name] = compObj;
       }
 
-      for (let itr = 0; itr < baseBuildingConfig.buildings.length; ++itr) {
-        let building = baseBuildingConfig.buildings[itr];
-        testBuilding = new Building(building, buildingComps);
-        testBuilding.construct(vec4.fromValues(0,0,0,1), shapeGrammarSystem);
-      }
+      logTrace('Loaded Components are:', buildingComps);
+      logTrace('Loaded Blueprints are:', buildingBlueprints);
+
+      generator.meshInstances = meshInstances;
+      generator.buildingComps = buildingComps;
+      generator.buildingBlueprints = buildingBlueprints;
+      generator.grammarSystem = shapeGrammarSystem;
+      generator.debugLines = boundingLines;
+
+      generator.build(400, 400, vec4.fromValues(0,0,0,0));
 
       for(let key in meshInstances) {
         meshInstances[key].create();
@@ -200,6 +209,10 @@ function loadAssets() {
       boundingLines.create();
 
       FlagIsRenderable = true;
+
+      if (callback) {
+        callback();
+      }
     })
     .catch(function(err) {
       logError('Asset Library Loading Error', err);
@@ -491,7 +504,7 @@ function main() {
 
   regularShader = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/regular-vert.glsl')),
-    new Shader(gl.FRAGMENT_SHADER, require('./shaders/custom-frag.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/regular-frag.glsl')),
   ]);
 
   visualShader = new ShaderProgram([
@@ -511,8 +524,6 @@ function main() {
 
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-  loadAssets();
 
   let shadowMapBuffer:any = {};
 
@@ -619,7 +630,8 @@ function main() {
 
   // Start the render loop
   prevTime = (new Date()).getTime();
-  tick();
+
+  loadAssets(tick);
 }
 
 main();

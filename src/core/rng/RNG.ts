@@ -3,6 +3,9 @@ let Noise = require('noisejs').Noise;
 var Logger = require('debug');
 var logTrace = Logger("mainApp:rng:trace");
 
+const cachedNoise = require('../../config/noise.json');
+const simplexNoise = cachedNoise['simplex2d'];
+
 class RNG {
   noiseGen: any;
   min: number;
@@ -20,7 +23,10 @@ class RNG {
   }
 
   roll(): number {
-    let noise = this.noiseGen.simplex2(this.rollItr * 13, this.rollItr * 29);
+    let x = (this.rollItr * this.seed * 13) % simplexNoise['sizeX'];
+    let y = (this.rollItr * this.seed * 29) % simplexNoise['sizeY'];
+
+    let noise = simplexNoise['values'][x][y];
     this.rollItr += 19;
 
     noise = (noise + 1.0) / 2.0;

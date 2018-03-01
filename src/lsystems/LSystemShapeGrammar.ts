@@ -9,7 +9,8 @@ import {
 } from 'gl-matrix';
 
 var Logger = require('debug');
-var logTrace = Logger("mainApp:shapeGrammar:info:instance:transform");
+var logTrace = Logger("mainApp:shapeGrammar:trace:instance:transform");
+var logInfo = Logger("mainApp:shapeGrammar:info:instance:transform");
 var logError = Logger("mainApp:shapeGrammar:error:instance:transform");
 
 let localOrigin = vec4.fromValues(0,0,0,1);
@@ -24,12 +25,18 @@ function makeBoundingLine(p0: vec3, p1: vec3, mesh: any) {
 }
 
 function drawSquareLot() {
+  let scaleRatio = 1.0;
+  if (this.ruleData && this.ruleData[0]) {
+    scaleRatio = Number.parseFloat(this.ruleData[0]);
+  }
+
   let returnObj: any = {};
   returnObj.lot = this.scope.lotsMap.Square;
-  returnObj.localScale = 30;
+  returnObj.localScale = scaleRatio * (this.scope.property.sideLength / 2.0);
 
   let lotPosition = vec4.create();
-  vec4.transformMat4(lotPosition, localOrigin, this.turtle.transform);
+  // vec4.transformMat4(lotPosition, localOrigin, this.turtle.transform);
+  vec4.copy(lotPosition, this.turtle.position);
 
   returnObj.localTranslation = lotPosition;
 
@@ -45,8 +52,10 @@ function rotateCCW90() {
 }
 
 function moveForward() {
+  let magnitude = Number.parseFloat(this.ruleData[0]);
+
   let transform = mat4.create();
-  mat4.fromTranslation(transform,  vec3.fromValues(1, 0, 0));
+  mat4.fromTranslation(transform,  vec3.fromValues(magnitude, 0, 0));
   this.turtle.applyTransform(transform);
 }
 
@@ -58,7 +67,10 @@ class LSystemShapeGrammar {
     this.system = new LSystem(seed);
 
     this.system.setAxiom("P");
-    this.system.addRule("P", "bF{1}+P");
+    this.system.addWeightedRule("P", "bF{1}+P", 33);
+    this.system.addWeightedRule("P", "bF{0.5}+P", 50);
+    this.system.addWeightedRule("P", "F{0.5}+F{0.5}b{1}X", 125);
+    this.system.addRule("X", "[F{0.5}b{0.33}]+X");
 
     this.system.addSymbol('b', drawSquareLot, []);
     this.system.addSymbol('+', rotateCCW90, []);
@@ -74,8 +86,9 @@ class LSystemShapeGrammar {
     this.scope[key] = val;
   }
 
-  construct(itr: number) {
-    this.system.construct(itr);
+  construct(itr: number, generationConstraint: any) {
+    this.system.construct(itr, generationConstraint);
+    // logInfo(this.system.rootString.join(''));
     this.system.process(this.scope);
 
     return this.scope.resultLots;

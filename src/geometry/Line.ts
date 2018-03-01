@@ -37,6 +37,17 @@ class Line extends Drawable {
     this.lines = true;
   }
 
+  add(p1: vec4, p2: vec4) {
+    let p1Copy = vec4.create();
+    vec4.copy(p1Copy, p1);
+
+    let p2Copy = vec4.create();
+    vec4.copy(p2Copy, p2);
+
+    this.linesArray.push(p1Copy);
+    this.linesArray.push(p2Copy);
+  }
+
   create() {
 
     this.positions = new Float32Array([]);

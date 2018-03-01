@@ -72,6 +72,7 @@ class ShaderProgram {
   unifControlsSandColor: WebGLUniformLocation;
   unifControlsElevation: WebGLUniformLocation;
   unifControlsNoiseScale: WebGLUniformLocation;
+  unifGlobalTransform: WebGLUniformLocation;
 
   constructor(shaders: Array<Shader>) {
     this.prog = gl.createProgram();
@@ -111,6 +112,7 @@ class ShaderProgram {
     this.unifSMLightSpace = gl.getUniformLocation(this.prog, "u_LightSpaceMatrix");
     this.unifSMLightViewport = gl.getUniformLocation(this.prog, "u_LightViewportMatrix");
     this.unifShadowTexture = gl.getUniformLocation(this.prog, "u_ShadowTexture");
+    this.unifGlobalTransform = gl.getUniformLocation(this.prog, "u_GlobalTransform");
   }
 
   use() {
@@ -299,6 +301,13 @@ class ShaderProgram {
 
     if (this.unifSMLightViewport !== -1) {
       gl.uniformMatrix4fv(this.unifSMLightViewport, false, lightViewport);
+    }
+  }
+
+  setGlobalTransfrom(value: mat4) {
+    this.use();
+    if (this.unifGlobalTransform !== -1) {
+      gl.uniformMatrix4fv(this.unifGlobalTransform, false, value);
     }
   }
 
