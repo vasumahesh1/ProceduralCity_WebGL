@@ -57,6 +57,22 @@ function rotateCW90() {
   this.turtle.applyTransform(transform);
 }
 
+function rotateCCWAngle() {
+  let magnitude = Number.parseFloat(this.ruleData[0]);
+
+  let transform = mat4.create();
+  mat4.fromYRotation(transform, degreeToRad(-magnitude));
+  this.turtle.applyTransform(transform);
+}
+
+function rotateCWAngle() {
+  let magnitude = Number.parseFloat(this.ruleData[0]);
+
+  let transform = mat4.create();
+  mat4.fromYRotation(transform, degreeToRad(magnitude));
+  this.turtle.applyTransform(transform);
+}
+
 function moveForward() {
   let magnitude = Number.parseFloat(this.ruleData[0]);
 
@@ -68,6 +84,22 @@ function moveForward() {
 
   let transform = mat4.create();
   mat4.fromTranslation(transform,  vec3.fromValues(headingWorld[0], headingWorld[1], headingWorld[2]));
+  this.turtle.applyTransformPre(transform);
+}
+
+function moveUp() {
+  let magnitude = Number.parseFloat(this.ruleData[0]);
+
+  let transform = mat4.create();
+  mat4.fromTranslation(transform,  vec3.fromValues(0, magnitude, 0));
+  this.turtle.applyTransformPre(transform);
+}
+
+function moveDown() {
+  let magnitude = Number.parseFloat(this.ruleData[0]);
+
+  let transform = mat4.create();
+  mat4.fromTranslation(transform,  vec3.fromValues(0, -magnitude, 0));
   this.turtle.applyTransformPre(transform);
 }
 
@@ -90,18 +122,20 @@ class LSystemShapeGrammar {
 
     this.system.setAxiom("P");
     // this.system.addWeightedRule("P", "Q", 100);
-    this.system.addWeightedRule("P", "F{0.5}+F{0.5}bW", 100); // F{0.5}+F{0.5}b
+    // this.system.addWeightedRule("P", "F{0.5}+F{0.5}bW", 100);
+    // this.system.addWeightedRule("P", "E", 100);
+    // this.system.addWeightedRule("P", "F{0.5}+F{0.5}bR", 100);
+    this.system.addWeightedRule("P", "F{0.5}+F{0.5}bT", 100);
 
 
+    this.system.addRule("Q", "bF{1}+Q");
+    this.system.addRule("W", "F{1.0}b{0.5}F{1.0}-W");
+    this.system.addRule("E", "[F{0.2}+F{0.2}b{0.75}]F{1.75}+E");
 
+    this.system.addRule("R", "F{1.0}^{0.5}b{0.5}F{1.0}-R");
+    this.system.addRule("T", "F{1.0}[^{0.5}b{0.5}]F{1.0}-T");
 
-    this.system.addRule("Q", "b+F{1}Q");
-    // this.system.addRule("W", "+F{0.25}-F{0.25}b{0.5}F{0.75}-F{0.25}");
-    this.system.addRule("W", "F{1.0}b{0.5}F{1.0}-W");// "F{1.0}b{0.5}F{1.5}+b{0.5}");
     // this.system.addRule("W", "V{1.0,0,0}b{0.5}V{1.0,0,0}V{0,0,1.0}b{0.5}");
-
-
-
     // this.system.addWeightedRule("P", "bF{0.5}+P", 50);
     // this.system.addWeightedRule("P", "F{0.5}+F{0.5}b{1}X", 125);
     // this.system.addRule("X", "[F{0.5}b{0.33}]+X");
@@ -109,6 +143,13 @@ class LSystemShapeGrammar {
     this.system.addSymbol('b', drawSquareLot, []);
     this.system.addSymbol('+', rotateCCW90, []);
     this.system.addSymbol('-', rotateCW90, []);
+
+    this.system.addSymbol('*', rotateCCWAngle, []);
+    this.system.addSymbol('/', rotateCWAngle, []);
+
+    this.system.addSymbol('^', moveUp, []);
+    this.system.addSymbol('v', moveDown, []);
+
     this.system.addSymbol('F', moveForward, []);
     this.system.addSymbol('V', moveVector, []);
 

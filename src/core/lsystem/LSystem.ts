@@ -185,6 +185,8 @@ class LSystemTurtle {
   static fromExisting(src: LSystemTurtle): LSystemTurtle {
     let copy = new LSystemTurtle();
     vec4.copy(copy.position, src.position);
+    vec4.copy(copy.basePosition, src.basePosition);
+    vec4.copy(copy.baseHeading, src.baseHeading);
     vec4.copy(copy.heading, src.heading);
     mat4.copy(copy.transform, src.transform);
 
