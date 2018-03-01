@@ -51,11 +51,33 @@ function rotateCCW90() {
   this.turtle.applyTransform(transform);
 }
 
+function rotateCW90() {
+  let transform = mat4.create();
+  mat4.fromYRotation(transform, degreeToRad(90));
+  this.turtle.applyTransform(transform);
+}
+
 function moveForward() {
   let magnitude = Number.parseFloat(this.ruleData[0]);
 
+  let headingWorld = vec4.create();
+  vec4.copy(headingWorld, this.turtle.heading);
+  vec4.scale(headingWorld, headingWorld, magnitude);
+
+  logError('Resultant Heading For Forward', headingWorld);
+
   let transform = mat4.create();
-  mat4.fromTranslation(transform,  vec3.fromValues(magnitude, 0, 0));
+  mat4.fromTranslation(transform,  vec3.fromValues(headingWorld[0], headingWorld[1], headingWorld[2]));
+  this.turtle.applyTransformPre(transform);
+}
+
+function moveVector() {
+  let x = Number.parseFloat(this.ruleData[0]);
+  let y = Number.parseFloat(this.ruleData[1]);
+  let z = Number.parseFloat(this.ruleData[2]);
+
+  let transform = mat4.create();
+  mat4.fromTranslation(transform,  vec3.fromValues(x, y, z));
   this.turtle.applyTransform(transform);
 }
 
@@ -67,15 +89,16 @@ class LSystemShapeGrammar {
     this.system = new LSystem(seed);
 
     this.system.setAxiom("P");
-    this.system.addWeightedRule("P", "Q", 100);
-    // this.system.addWeightedRule("P", "W", 100);
+    // this.system.addWeightedRule("P", "Q", 100);
+    this.system.addWeightedRule("P", "F{0.5}+F{0.5}bW", 100); // F{0.5}+F{0.5}b
 
 
 
 
     this.system.addRule("Q", "b+F{1}Q");
-    this.system.addRule("W", "b{0.5}+F{1}W");
-
+    // this.system.addRule("W", "+F{0.25}-F{0.25}b{0.5}F{0.75}-F{0.25}");
+    this.system.addRule("W", "F{1.0}b{0.5}F{1.0}-W");// "F{1.0}b{0.5}F{1.5}+b{0.5}");
+    // this.system.addRule("W", "V{1.0,0,0}b{0.5}V{1.0,0,0}V{0,0,1.0}b{0.5}");
 
 
 
@@ -85,7 +108,9 @@ class LSystemShapeGrammar {
 
     this.system.addSymbol('b', drawSquareLot, []);
     this.system.addSymbol('+', rotateCCW90, []);
+    this.system.addSymbol('-', rotateCW90, []);
     this.system.addSymbol('F', moveForward, []);
+    this.system.addSymbol('V', moveVector, []);
 
     this.scope = {
       resultLots: [],
@@ -101,7 +126,7 @@ class LSystemShapeGrammar {
     this.scope.resultLots = [];
 
     this.system.construct(itr, generationConstraint);
-    logInfo(this.system.rootString.join(''));
+    logInfo('Production', this.system.rootString.join(''));
     this.system.process(this.scope);
 
     return this.scope.resultLots;

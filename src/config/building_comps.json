@@ -29,5 +29,12 @@
     "type": "roof",
     "baseScale": [1, 1, 1],
     "uvOffset": [1,0]
+  }, {
+    "name": "SepComponent1",
+    "url": "./src/objs/comp_sep_1.obj",
+    "width": 0,
+    "type": "roof",
+    "baseScale": [1, 1, 1],
+    "uvOffset": [1,0]
   }]
 }

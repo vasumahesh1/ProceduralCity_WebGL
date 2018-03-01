@@ -5,7 +5,7 @@ import RNG from '../rng/RNG';
 import ShapeGrammar from './ShapeGrammar';
 
 var Logger = require('debug');
-var logTrace = Logger("mainApp:building:info");
+var logTrace = Logger("mainApp:building:trace");
 var logError = Logger("mainApp:building:error");
 
 const ROOT_TWO = 1.414213562;
@@ -43,6 +43,10 @@ class FloorConstraint {
 
 class RoofConstraint {
   rng: any;
+}
+
+class SepConstraint {
+  objRng: any;
 }
 
 class BuildCommand {
@@ -198,6 +202,7 @@ class BuildingContext {
   wallComponent: any;
   windowComponent: any;
   roofComponent: any;
+  sepComponent: any;
   floorCount: number;
   floorHeight: number;
   placeSeparator: boolean;
@@ -294,6 +299,7 @@ class Building {
   defaultWallConstraint: WallConstraint;
   defaultFloorConstraint: FloorConstraint;
   defaultRoofConstraint: RoofConstraint;
+  defaultSepConstraint: SepConstraint;
   floorBasedWallConstraint: Array<WallConstraint>;
 
   constructor(config: any, components: any) {
@@ -374,6 +380,12 @@ class Building {
     this.defaultRoofConstraint = constraint;
   }
 
+  private loadSep(config: any) {
+    let constraint = new SepConstraint();
+    constraint.objRng = this.getRNG(config.obj.rng);
+    this.defaultSepConstraint = constraint;
+  }
+
   loadConfig(config: any) {
     if (!config.walls) {
       logError(`${this.name} No Walls in Config Provided`);
@@ -392,6 +404,7 @@ class Building {
     this.loadWalls(config.walls);
     this.loadFloors(config.floors);
     this.loadRoofs(config.roofs);
+    this.loadSep(config.floors.separator);
 
     this.iterationRng = this.getRNG(config.iteration.rng);
 
@@ -518,7 +531,7 @@ class Building {
     vec4.add(roofTranslate, roofTranslate, this.context.overallTranslation);
     vec4.add(roofTranslate, roofTranslate, vec4.fromValues(0,floorHeight * floorCount,0, 0));
 
-    roofComponent.instance.addInstance(roofTranslate, vec4.fromValues(0,0,0,1), vec3.fromValues(1,1,1));
+    roofComponent.instance.addInstance(roofTranslate, vec4.fromValues(0,0,0,1), vec3.fromValues(lotScale / 7.5, lotScale / 7.5, lotScale / 7.5));
 
     for (var itr = 0; itr < lot.sides.length; ++itr) {
       let side = Object.create(lot.sides[itr]);
@@ -588,7 +601,7 @@ class Building {
           vec4.add(separatorTranslate, separatorTranslate, this.context.overallTranslation);
           vec4.add(separatorTranslate, separatorTranslate, vec4.fromValues(0, floorY, 0, 0));
 
-          roofComponent.instance.addInstance(separatorTranslate, vec4.fromValues(0,0,0,1), vec3.fromValues(1,1,1));
+          this.context.sepComponent.instance.addInstance(separatorTranslate, vec4.fromValues(0,0,0,1), vec3.fromValues(lotScale / 7.5, 1.0, lotScale / 7.5));
         }
 
         for (var cmdItr = 0; cmdItr < cmds.length; ++cmdItr) {
@@ -660,6 +673,7 @@ class Building {
     this.context.windowComponent = this.components.WindowComponent1;
     this.context.rootTranslation = rootTranslation;
     this.context.roofComponent = this.components[this.defaultRoofConstraint.rng.roll()];
+    this.context.sepComponent = this.components[this.defaultSepConstraint.objRng.roll()];
 
     this.context.floorCount = Math.round(this.defaultFloorConstraint.rng.roll());
     this.context.floorType = this.defaultFloorConstraint.typeRng.roll();
@@ -681,9 +695,9 @@ class Building {
       let obj = generatedLots[itr];
 
       let scaledLocal = vec4.create();
-      scaledLocal[0] = obj.localTranslation[0] * obj.localScale;
-      scaledLocal[1] = obj.localTranslation[1] * obj.localScale;
-      scaledLocal[2] = obj.localTranslation[2] * obj.localScale;
+      scaledLocal[0] = (obj.localTranslation[0])  * obj.localScale;
+      scaledLocal[1] = (obj.localTranslation[1]) * obj.localScale;
+      scaledLocal[2] = (obj.localTranslation[2]) * obj.localScale;
       scaledLocal[3] = 0;
 
       this.context.overallTranslation = vec4.create();

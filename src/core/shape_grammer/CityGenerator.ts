@@ -165,7 +165,7 @@ class CityGenerator {
         constraint.setPopulation(0.0, 1.0);
         constraint.setLandValue(0.0, 1.0);
 
-        let potentialProperty = new Property(15);
+        let potentialProperty = new Property(60);
         potentialProperty.setCenter(vec3.fromValues(coordVec2[0], 0, coordVec2[1]));
 
         if (!this.canPlaceProperty(potentialProperty)) {

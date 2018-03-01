@@ -84,6 +84,15 @@
               "CANNOT_PLACE": 0
             }
           }
+        },
+        "obj": {
+          "rng": {
+            "seed": 124,
+            "type": "WeightedRNG",
+            "val": {
+              "SepComponent1": 10
+            }
+          }
         }
       }
     },
@@ -164,8 +173,8 @@
           "type": "WeightedRNG",
           "val": {
             "RANDOM_ACROSS_LOTS": 0,
-            "RANDOM_ACROSS_FLOORS": 0,
-            "FIXED": 10
+            "RANDOM_ACROSS_FLOORS": 100,
+            "FIXED": 0
           }
         },
         "placement": {
@@ -173,8 +182,17 @@
             "seed": 2134,
             "type": "WeightedRNG",
             "val": {
-              "CAN_PLACE": 0,
-              "CANNOT_PLACE": 100
+              "CAN_PLACE": 100,
+              "CANNOT_PLACE": 0
+            }
+          }
+        },
+        "obj": {
+          "rng": {
+            "seed": 124,
+            "type": "WeightedRNG",
+            "val": {
+              "SepComponent1": 10
             }
           }
         }

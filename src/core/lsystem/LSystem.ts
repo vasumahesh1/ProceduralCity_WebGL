@@ -9,8 +9,6 @@ import Stack from '../ds/Stack';
 let Noise = require('noisejs').Noise;
 
 var Logger = require('debug');
-var dTransform = Logger("lsystem:trace:transform");
-var logTrace = Logger("lsystem:trace:stack");
 var dConstruct = Logger("lsystem:trace:construction");
 
 var logTrace = Logger("mainApp:CoreLSystem:info");
@@ -143,38 +141,45 @@ class LSystemStackEntry {
 class LSystemTurtle {
   position: vec4;
   heading: vec4;
+
+  basePosition: vec4;
+  baseHeading: vec4;
+
   transform: mat4;
 
   constructor() {
     this.position = vec4.fromValues(0, 0, 0, 1);
-    this.heading = vec4.fromValues(0, 1, 0, 0);
+    this.heading = vec4.fromValues(1, 0, 0, 0);
+
+    this.basePosition = vec4.fromValues(0, 0, 0, 1);
+    this.baseHeading = vec4.fromValues(1, 0, 0, 0);
     this.transform = mat4.create();
   }
 
   applyTransform(m: mat4) {
-    vec4.transformMat4(this.position, this.position, m);
-    vec4.transformMat4(this.heading, this.heading, m);
+    mat4.multiply(this.transform, this.transform, m);
+
+    vec4.transformMat4(this.position, this.basePosition, this.transform);
+    vec4.transformMat4(this.heading, this.baseHeading, this.transform);
 
     vec4.normalize(this.heading, this.heading);
 
-    mat4.multiply(this.transform, this.transform, m);
-
-    dTransform(`Resultant Heading: (${this.heading[0]}, ${this.heading[1]}, ${this.heading[2]})`);
-    dTransform(`Resultant Position: (${this.position[0]}, ${this.position[1]}, ${this.position[2]})`);
-    dTransform("Resultant Transform:", this.transform);
+    logTrace(`Resultant Heading: (${this.heading[0]}, ${this.heading[1]}, ${this.heading[2]})`);
+    logTrace(`Resultant Position: (${this.position[0]}, ${this.position[1]}, ${this.position[2]})`);
+    logTrace("Resultant Transform:", this.transform);
   }
 
   applyTransformPre(m: mat4) {
     mat4.multiply(this.transform, m, this.transform);
 
-    vec4.transformMat4(this.position, vec4.fromValues(0,0,0,1), this.transform);
-    vec4.transformMat4(this.heading, vec4.fromValues(0,1,0,0), this.transform);
+    vec4.transformMat4(this.position, this.basePosition, this.transform);
+    vec4.transformMat4(this.heading, this.baseHeading, this.transform);
 
     vec4.normalize(this.heading, this.heading);
 
-    dTransform(`Resultant Heading: (${this.heading[0]}, ${this.heading[1]}, ${this.heading[2]})`);
-    dTransform(`Resultant Position: (${this.position[0]}, ${this.position[1]}, ${this.position[2]})`);
-    dTransform("Resultant Transform:", this.transform);
+    logTrace(`Resultant Heading: (${this.heading[0]}, ${this.heading[1]}, ${this.heading[2]})`);
+    logTrace(`Resultant Position: (${this.position[0]}, ${this.position[1]}, ${this.position[2]})`);
+    logTrace("Resultant Transform:", this.transform);
   }
 
   static fromExisting(src: LSystemTurtle): LSystemTurtle {
