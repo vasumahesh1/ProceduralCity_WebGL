@@ -15,5 +15,19 @@
     "type": "window",
     "baseScale": [1, 1, 1],
     "uvOffset": [1,0]
+  }, {
+    "name": "RoofComponent1",
+    "url": "./src/objs/comp_roof_1.obj",
+    "width": 0,
+    "type": "roof",
+    "baseScale": [1, 1, 1],
+    "uvOffset": [1,0]
+  }, {
+    "name": "RoofComponent2",
+    "url": "./src/objs/comp_roof_2.obj",
+    "width": 0,
+    "type": "roof",
+    "baseScale": [1, 1, 1],
+    "uvOffset": [1,0]
   }]
 }

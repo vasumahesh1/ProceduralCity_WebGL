@@ -23,6 +23,16 @@
       },
       "default": true
     }],
+    "roofs": {
+      "rng": {
+        "seed": 17,
+        "type": "WeightedRNG",
+        "val": {
+          "RoofComponent1": 10,
+          "RoofComponent2": 50
+        }
+      }
+    },
     "iteration": {
       "rng": {
         "seed": 39,
@@ -53,6 +63,120 @@
           "type": "RNG",
           "min": 3,
           "max": 6
+        }
+      },
+      "separator": {
+        "rng": {
+          "seed": 432,
+          "type": "WeightedRNG",
+          "val": {
+            "RANDOM_ACROSS_LOTS": 2,
+            "RANDOM_ACROSS_FLOORS": 0,
+            "FIXED": 100
+          }
+        },
+        "placement": {
+          "rng": {
+            "seed": 2134,
+            "type": "WeightedRNG",
+            "val": {
+              "CAN_PLACE": 100,
+              "CANNOT_PLACE": 0
+            }
+          }
+        }
+      }
+    },
+    "constraints": {
+      "population": 0.6,
+      "landValue": 0.0,
+      "grammarControlsFloors": false
+    }
+  }, {
+    "name": "Building Blueprint 2",
+    "selectionWeight": 100,
+    "walls": [{
+      "rng": {
+        "seed": 17,
+        "type": "WeightedRNG",
+        "val": {
+          "WallComponent1": 10
+        }
+      },
+      "availability": {
+        "floors": [3, 5]
+      }
+    }, {
+      "rng": {
+        "seed": 123,
+        "type": "WeightedRNG",
+        "val": {
+          "WallComponent1": 10
+        }
+      },
+      "default": true
+    }],
+    "roofs": {
+      "rng": {
+        "seed": 17,
+        "type": "WeightedRNG",
+        "val": {
+          "RoofComponent1": 10,
+          "RoofComponent2": 50
+        }
+      }
+    },
+    "iteration": {
+      "rng": {
+        "seed": 39,
+        "type": "RNG",
+        "min": 2,
+        "max": 4
+      }
+    },
+    "floors": {
+      "rng": {
+        "seed": 3,
+        "type": "RNG",
+        "min": 7,
+        "max": 12
+      },
+      "type": {
+        "rng": {
+          "seed": 123,
+          "type": "WeightedRNG",
+          "val": {
+            "RANDOM_ACROSS_LOTS": 2
+          }
+        }
+      },
+      "height": {
+        "rng": {
+          "seed": 213,
+          "type": "RNG",
+          "min": 3,
+          "max": 6
+        }
+      },
+      "separator": {
+        "rng": {
+          "seed": 432,
+          "type": "WeightedRNG",
+          "val": {
+            "RANDOM_ACROSS_LOTS": 0,
+            "RANDOM_ACROSS_FLOORS": 0,
+            "FIXED": 10
+          }
+        },
+        "placement": {
+          "rng": {
+            "seed": 2134,
+            "type": "WeightedRNG",
+            "val": {
+              "CAN_PLACE": 0,
+              "CANNOT_PLACE": 100
+            }
+          }
         }
       }
     },

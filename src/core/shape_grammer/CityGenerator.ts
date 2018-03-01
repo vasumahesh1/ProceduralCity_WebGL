@@ -132,9 +132,11 @@ class CityGenerator {
       return;
     }
 
-    let random = (getRandom2D(this.seed * 31, this.seed * 729) + 1.0) / 2.0;
+    let random = (getRandom2D(this.seed * property.center[0] * 31, this.seed * property.center[2] * 729) + 1.0) / 2.0;
 
     let idx = Math.floor(random * selectedBlueprints.length);
+
+    logError('Blueprint Selected IDX', idx);
 
     this.blueprints[idx].construct(finalPosition, this.grammarSystem, constraint, property);
 

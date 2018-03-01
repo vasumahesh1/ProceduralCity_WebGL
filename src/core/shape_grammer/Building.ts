@@ -37,6 +37,12 @@ class FloorConstraint {
   rng: any;
   typeRng: any;
   heightRng: any;
+  separatorRng: any;
+  placementRng: any;
+}
+
+class RoofConstraint {
+  rng: any;
 }
 
 class BuildCommand {
@@ -191,9 +197,13 @@ class BuildingComponent {
 class BuildingContext {
   wallComponent: any;
   windowComponent: any;
+  roofComponent: any;
   floorCount: number;
   floorHeight: number;
+  placeSeparator: boolean;
   floorType: string;
+  floorSeparator: string;
+  floorSeparatorPlacement: string;
   rootTranslation: vec4;
   overallTranslation: vec4;
 }
@@ -283,6 +293,7 @@ class Building {
   iterationRng: any;
   defaultWallConstraint: WallConstraint;
   defaultFloorConstraint: FloorConstraint;
+  defaultRoofConstraint: RoofConstraint;
   floorBasedWallConstraint: Array<WallConstraint>;
 
   constructor(config: any, components: any) {
@@ -352,7 +363,15 @@ class Building {
     constraint.rng = this.getRNG(config.rng);
     constraint.typeRng = this.getRNG(config.type.rng);
     constraint.heightRng = this.getRNG(config.height.rng);
+    constraint.separatorRng = this.getRNG(config.separator.rng);
+    constraint.placementRng = this.getRNG(config.separator.placement.rng);
     this.defaultFloorConstraint = constraint;
+  }
+
+  private loadRoofs(config: any) {
+    let constraint = new RoofConstraint();
+    constraint.rng = this.getRNG(config.rng);
+    this.defaultRoofConstraint = constraint;
   }
 
   loadConfig(config: any) {
@@ -372,6 +391,7 @@ class Building {
 
     this.loadWalls(config.walls);
     this.loadFloors(config.floors);
+    this.loadRoofs(config.roofs);
 
     this.iterationRng = this.getRNG(config.iteration.rng);
 
@@ -420,12 +440,11 @@ class Building {
         info.strechable++;
       } else if (obj == 'W') {
         width = window.width;
+        info.required += width;
       }
-      
-      info.required += width;
     }
 
-    let starLength = Math.floor((length - info.required) / info.strechable);
+    let starLength = (length - info.required) / info.strechable;
 
     let commands = Array<BuildCommand>();
 
@@ -480,10 +499,26 @@ class Building {
     let floorCount = this.context.floorCount;
     let floorHeight = this.context.floorHeight;
 
+    let roofComponent = this.context.roofComponent;
+
     if (this.context.floorType == "RANDOM_ACROSS_LOTS") {
       floorCount = Math.round(this.defaultFloorConstraint.rng.roll());
       floorHeight = Math.round(this.defaultFloorConstraint.heightRng.roll());
     }
+
+    if (this.context.floorSeparator == "RANDOM_ACROSS_LOTS") {
+      this.context.placeSeparator = this.defaultFloorConstraint.placementRng.roll() == "CAN_PLACE";
+    }
+
+    let localLotTranslation = lotGenerateConfig.localTranslation;
+
+    let lotStartVector = vec4.fromValues(lot.sides[0].startX, 0, lot.sides[0].startY, 1);
+
+    let roofTranslate = vec4.fromValues(lot.sides[0].startX, 0, lot.sides[0].startY, 1);
+    vec4.add(roofTranslate, roofTranslate, this.context.overallTranslation);
+    vec4.add(roofTranslate, roofTranslate, vec4.fromValues(0,floorHeight * floorCount,0, 0));
+
+    roofComponent.instance.addInstance(roofTranslate, vec4.fromValues(0,0,0,1), vec3.fromValues(1,1,1));
 
     for (var itr = 0; itr < lot.sides.length; ++itr) {
       let side = Object.create(lot.sides[itr]);
@@ -541,6 +576,20 @@ class Building {
         let translate = vec4.fromValues(side.startX, 0, side.startY, 1);
         vec4.add(translate, translate, this.context.overallTranslation);
         vec4.add(translate, translate, vec4.fromValues(0,floorY,0, 0));
+
+        if (this.context.floorSeparator == "RANDOM_ACROSS_FLOORS") {
+          this.context.placeSeparator = this.defaultFloorConstraint.placementRng.roll() == "CAN_PLACE";
+        }
+
+        if (this.context.placeSeparator && floorIdx != floorCount - 1) {
+          let floorY = floorHeight * (floorIdx + 1);
+          let separatorTranslate = vec4.create();
+          vec4.copy(separatorTranslate, lotStartVector);
+          vec4.add(separatorTranslate, separatorTranslate, this.context.overallTranslation);
+          vec4.add(separatorTranslate, separatorTranslate, vec4.fromValues(0, floorY, 0, 0));
+
+          roofComponent.instance.addInstance(separatorTranslate, vec4.fromValues(0,0,0,1), vec3.fromValues(1,1,1));
+        }
 
         for (var cmdItr = 0; cmdItr < cmds.length; ++cmdItr) {
           let cmd = cmds[cmdItr];
@@ -610,10 +659,14 @@ class Building {
     this.context.wallComponent = this.components.WallComponent1;
     this.context.windowComponent = this.components.WindowComponent1;
     this.context.rootTranslation = rootTranslation;
+    this.context.roofComponent = this.components[this.defaultRoofConstraint.rng.roll()];
 
     this.context.floorCount = Math.round(this.defaultFloorConstraint.rng.roll());
     this.context.floorType = this.defaultFloorConstraint.typeRng.roll();
     this.context.floorHeight = Math.round(this.defaultFloorConstraint.heightRng.roll());
+    this.context.floorSeparator = this.defaultFloorConstraint.separatorRng.roll();
+    this.context.floorSeparatorPlacement = this.defaultFloorConstraint.placementRng.roll();
+    this.context.placeSeparator = this.context.floorSeparatorPlacement == "CAN_PLACE";
 
     let valItr = Math.round(this.iterationRng.roll());
 
