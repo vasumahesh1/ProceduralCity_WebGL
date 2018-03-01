@@ -5,7 +5,7 @@ import RNG from '../rng/RNG';
 import ShapeGrammar from './ShapeGrammar';
 
 var Logger = require('debug');
-var logTrace = Logger("mainApp:building:trace");
+var logTrace = Logger("mainApp:building:info");
 var logError = Logger("mainApp:building:error");
 
 const ROOT_TWO = 1.414213562;
@@ -167,8 +167,8 @@ class Lot {
     defaultConfig.rng = this.getRNG({
       seed: 213,
       type: 'RNG',
-      min: 3,
-      max: 5
+      min: 1,
+      max: 4
     });
 
     for (var itr = 0; itr < config.sides.length; ++itr) {
@@ -280,6 +280,7 @@ class Building {
   grammar: ShapeGrammar;
   context : BuildingContext;
 
+  iterationRng: any;
   defaultWallConstraint: WallConstraint;
   defaultFloorConstraint: FloorConstraint;
   floorBasedWallConstraint: Array<WallConstraint>;
@@ -372,6 +373,8 @@ class Building {
     this.loadWalls(config.walls);
     this.loadFloors(config.floors);
 
+    this.iterationRng = this.getRNG(config.iteration.rng);
+
     logTrace(`${this.name} Loaded Config Successfully`);
   }
 
@@ -388,6 +391,26 @@ class Building {
 
     logTrace(`Build String: ${buildString}`);
 
+    let calcLength = length;
+
+    logError('Updating BuildString', buildString);
+
+    for (var itr = 0; itr < buildString.length; itr += 1) {
+      let obj = buildString[itr];
+
+      if (obj == '*') {
+        calcLength--;
+      } else if (obj == 'W') {
+        calcLength -= window.width;
+      }
+
+      if (calcLength <= 0) {
+        buildString = buildString.substr(0, itr);
+        logError('Updated BuildString', buildString);
+        break;
+      }
+    }
+
     for (var itr = 0; itr < buildString.length; itr += 1) {
       let obj = buildString[itr];
 
@@ -396,7 +419,7 @@ class Building {
       if (obj == '*') {
         info.strechable++;
       } else if (obj == 'W') {
-        width = wall.width;
+        width = window.width;
       }
       
       info.required += width;
@@ -466,7 +489,7 @@ class Building {
       let side = Object.create(lot.sides[itr]);
       side.scale(lotScale);
 
-      let cmds = this.getBuildCommandsForSide(side, null, this.context.wallComponent);
+      let cmds = this.getBuildCommandsForSide(side, this.context.windowComponent, this.context.wallComponent);
 
       logTrace('Got Build Commands for Side: ', cmds);
 
@@ -592,8 +615,14 @@ class Building {
     this.context.floorType = this.defaultFloorConstraint.typeRng.roll();
     this.context.floorHeight = Math.round(this.defaultFloorConstraint.heightRng.roll());
 
+    let valItr = Math.round(this.iterationRng.roll());
+
+    logError('Using Iterations:', valItr);
+
     shapeGrammar.addScope('property', property);
-    let generatedLots = shapeGrammar.construct(3, generationConstraint);
+    let generatedLots = shapeGrammar.construct(valItr + 1, generationConstraint);
+    
+    logError('Total Lots Generated:', generatedLots.length);
 
     for (var itr = 0; itr < generatedLots.length; ++itr) {
       let obj = generatedLots[itr];

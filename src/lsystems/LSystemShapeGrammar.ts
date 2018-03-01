@@ -40,7 +40,7 @@ function drawSquareLot() {
 
   returnObj.localTranslation = lotPosition;
 
-  logTrace('Turtle Position:', lotPosition);
+  logInfo('Turtle Position:', lotPosition);
 
   this.scope.resultLots.push(returnObj);
 }
@@ -67,10 +67,21 @@ class LSystemShapeGrammar {
     this.system = new LSystem(seed);
 
     this.system.setAxiom("P");
-    this.system.addWeightedRule("P", "bF{1}+P", 33);
-    this.system.addWeightedRule("P", "bF{0.5}+P", 50);
-    this.system.addWeightedRule("P", "F{0.5}+F{0.5}b{1}X", 125);
-    this.system.addRule("X", "[F{0.5}b{0.33}]+X");
+    this.system.addWeightedRule("P", "Q", 100);
+    // this.system.addWeightedRule("P", "W", 100);
+
+
+
+
+    this.system.addRule("Q", "b+F{1}Q");
+    this.system.addRule("W", "b{0.5}+F{1}W");
+
+
+
+
+    // this.system.addWeightedRule("P", "bF{0.5}+P", 50);
+    // this.system.addWeightedRule("P", "F{0.5}+F{0.5}b{1}X", 125);
+    // this.system.addRule("X", "[F{0.5}b{0.33}]+X");
 
     this.system.addSymbol('b', drawSquareLot, []);
     this.system.addSymbol('+', rotateCCW90, []);
@@ -87,8 +98,10 @@ class LSystemShapeGrammar {
   }
 
   construct(itr: number, generationConstraint: any) {
+    this.scope.resultLots = [];
+
     this.system.construct(itr, generationConstraint);
-    // logInfo(this.system.rootString.join(''));
+    logInfo(this.system.rootString.join(''));
     this.system.process(this.scope);
 
     return this.scope.resultLots;

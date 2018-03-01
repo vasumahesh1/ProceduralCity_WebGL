@@ -23,6 +23,14 @@
       },
       "default": true
     }],
+    "iteration": {
+      "rng": {
+        "seed": 39,
+        "type": "RNG",
+        "min": 2,
+        "max": 4
+      }
+    },
     "floors": {
       "rng": {
         "seed": 3,

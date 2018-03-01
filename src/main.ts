@@ -200,7 +200,7 @@ function loadAssets(callback?: any) {
       generator.grammarSystem = shapeGrammarSystem;
       generator.debugLines = boundingLines;
 
-      generator.build(400, 400, vec4.fromValues(0,0,0,0));
+      generator.build(30, 30, vec4.fromValues(0,0,0,0));
 
       for(let key in meshInstances) {
         meshInstances[key].create();
