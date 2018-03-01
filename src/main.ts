@@ -1,4 +1,4 @@
-import { vec3, vec4, mat4, glMatrix } from 'gl-matrix';
+import { vec2, vec3, vec4, mat4, glMatrix } from 'gl-matrix';
 import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
@@ -47,7 +47,7 @@ let controls = {
   axiom: "[F][/-F][*+F][++*F][--*F]",
   seed: 858.739,
   iterations: 4,
-  lightDirection: [1000, 1000, 1000],
+  lightDirection: [150, 150, 0],
   influencers: {
     sunlight: 0.0,
     gravity: 5.0,
@@ -89,8 +89,10 @@ let shaderControls: ShaderControls;
 
 let testBuilding: Building;
 let testRNG: WeightedRNG;
+let mainAtlas: Texture;
 
 let assetLibrary: AssetLibrary;
+let regularShader: ShaderProgram;
 let mainShader: ShaderProgram;
 let skyShader: ShaderProgram;
 let visualShader: ShaderProgram;
@@ -124,10 +126,12 @@ function loadAssets() {
     sky.destory();
   }
 
-  plane = new NoisePlane(500, 500, 75, 75, 8234.738169);
+  plane = new NoisePlane(500, 500, 75, 75, 8123);
   plane.create();
 
   boundingLines = new Line();
+
+  mainAtlas = new Texture('./psd/texture_atlas.png');
 
   // Enable for Debug
   boundingLines.linesArray.push(vec4.fromValues(0, 0, 0, 1.0));
@@ -163,9 +167,14 @@ function loadAssets() {
     .then(function() {
       logTrace('Loaded Asssets', assetLibrary);
 
-      for(let key in assetLibrary.meshes) {
-        meshInstances[key] = new MeshInstanced(key);
-        meshInstances[key].rawMesh = assetLibrary.meshes[key];
+      let uvScale = baseBuildingComps.uvScale;
+
+      for (let itr = 0; itr < baseBuildingComps.components.length; ++itr) {
+        let comp = baseBuildingComps.components[itr];
+        meshInstances[comp.name] = new MeshInstanced(comp.name);
+        meshInstances[comp.name].rawMesh = assetLibrary.meshes[comp.name];
+        meshInstances[comp.name].uvOffset = vec2.fromValues(comp.uvOffset[0] * uvScale, comp.uvOffset[1] * uvScale);
+        meshInstances[comp.name].uvScale = uvScale;
       }
 
       logTrace('MeshInstances are:', meshInstances);
@@ -480,6 +489,11 @@ function main() {
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/custom-frag.glsl')),
   ]);
 
+  regularShader = new ShaderProgram([
+    new Shader(gl.VERTEX_SHADER, require('./shaders/regular-vert.glsl')),
+    new Shader(gl.FRAGMENT_SHADER, require('./shaders/custom-frag.glsl')),
+  ]);
+
   visualShader = new ShaderProgram([
     new Shader(gl.VERTEX_SHADER, require('./shaders/visual-vert.glsl')),
     new Shader(gl.FRAGMENT_SHADER, require('./shaders/visual-frag.glsl')),
@@ -504,11 +518,11 @@ function main() {
 
   createShadowMapFrameBuffer(gl, shadowMapBuffer);
 
-  function renderScene (shader: ShaderProgram) {
-    // renderer.render(camera, shader, [plane]);
+  function renderScene (instanceShader: ShaderProgram, regularShader: ShaderProgram) {
+    renderer.render(camera, regularShader, [plane]);
     for (let key in meshInstances) {
       let mesh = meshInstances[key];
-      renderer.render(camera, shader, [mesh]);
+      renderer.render(camera, instanceShader, [mesh]);
     }
 
     renderer.render(camera, visualShader, [boundingLines]);
@@ -541,7 +555,7 @@ function main() {
 
     shadowMapShader.setEyePosition(vec4.fromValues(position[0], position[1], position[2], 1));
     setShadowMapData(shadowMapShader);
-    renderScene(shadowMapShader);
+    renderScene(shadowMapShader, shadowMapShader);
 
     /*----------  Render Scene  ----------*/
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
@@ -558,15 +572,25 @@ function main() {
 
     mainShader.setTime(frameCount);
     mainShader.setEyePosition(vec4.fromValues(position[0], position[1], position[2], 1));
+    
+    visualShader.setTime(frameCount);
     visualShader.setEyePosition(vec4.fromValues(position[0], position[1], position[2], 1));
+    
+    regularShader.setEyePosition(vec4.fromValues(position[0], position[1], position[2], 1));
 
-    mainShader.setLightPosition(lightDirection);
+    mainShader.setLightPosition(vec3.fromValues(lightDirection[0], lightDirection[1], lightDirection[2]));
+    regularShader.setLightPosition(vec3.fromValues(lightDirection[0], lightDirection[1], lightDirection[2]));
 
     mainShader.setShadowTexture(1);
+    regularShader.setShadowTexture(1);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, shadowMapBuffer.frameTexture);
 
-    renderScene(mainShader);
+    mainShader.setTexture(0);
+    regularShader.setTexture(0);
+    mainAtlas.bind(0);
+
+    renderScene(mainShader, regularShader);
 
     frameCount++;
 

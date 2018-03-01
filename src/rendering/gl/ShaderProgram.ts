@@ -36,6 +36,7 @@ class ShaderProgram {
 
   attrVertPos: number;
   attrNor: number;
+  attrUv: number;
   attrCol: number;
   attrInstancePos: number;
   attrInstanceScale: number;
@@ -86,6 +87,7 @@ class ShaderProgram {
     this.attrVertPos = gl.getAttribLocation(this.prog, "vs_Pos");
     this.attrNor = gl.getAttribLocation(this.prog, "vs_Nor");
     this.attrCol = gl.getAttribLocation(this.prog, "vs_Col");
+    this.attrUv = gl.getAttribLocation(this.prog, "vs_UV");
     this.attrInstancePos = gl.getAttribLocation(this.prog, "vs_InstPos");
     this.attrInstanceScale = gl.getAttribLocation(this.prog, "vs_InstScale");
     this.attrInstanceRotation = gl.getAttribLocation(this.prog, "vs_InstRotation");
@@ -421,6 +423,15 @@ class ShaderProgram {
       }
     }
 
+    if (this.attrUv != -1 && d.bindUv()) {
+      gl.enableVertexAttribArray(this.attrUv);
+      gl.vertexAttribPointer(this.attrUv, 2, gl.FLOAT, false, 0, 0);
+
+      if (d.isInstanced()) {
+        gl.vertexAttribDivisor(this.attrUv, 0);
+      }
+    }
+
     d.bindIdx();
 
     if (d.isInstanced()) {
@@ -436,6 +447,7 @@ class ShaderProgram {
     if (this.attrInstanceScale != -1) gl.disableVertexAttribArray(this.attrInstanceScale);
     if (this.attrNor != -1) gl.disableVertexAttribArray(this.attrNor);
     if (this.attrCol != -1) gl.disableVertexAttribArray(this.attrCol);
+    if (this.attrUv != -1) gl.disableVertexAttribArray(this.attrUv);
   }
 };
 

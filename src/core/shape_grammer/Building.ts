@@ -454,6 +454,26 @@ class Building {
 
             logTrace('Comp Instance Values: ', translate, quat, localScale);
             this.context.wallComponent.instance.addInstance(translate, quat, localScale);
+            
+            // let localScale = vec3.create();
+            // vec3.copy(localScale, scale);
+            // let localTranslate = vec4.create();
+            // vec4.copy(localTranslate, translate);
+
+            // for (var widthItr = 0; widthItr < cmd.width; ++widthItr) {
+            //   let scale = 1;
+            //   if (widthItr + 1 > cmd.width) {
+            //     scale = (widthItr + 1) - cmd.width;
+            //   }
+
+            //   localScale[0] = scale;
+            //   localScale[1] = wallYScale;
+
+            //   logTrace('Comp Instance Values: ', localTranslate, quat, localScale);
+            //   this.context.wallComponent.instance.addInstance(localTranslate, quat, localScale);
+
+            //   vec4.add(localTranslate, localTranslate, directionVec4);
+            // }
           }
           else if (cmd.type == "translate") {
             let widthDirection = vec3.create();

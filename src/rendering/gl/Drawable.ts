@@ -13,6 +13,7 @@ abstract class Drawable {
   bufVert: WebGLBuffer;
   bufNor: WebGLBuffer;
   bufCol: WebGLBuffer;
+  bufUv: WebGLBuffer;
   bufInstancePosition: WebGLBuffer;
   bufInstanceRotation: WebGLBuffer;
   bufInstanceScale: WebGLBuffer;
@@ -21,6 +22,7 @@ abstract class Drawable {
   vertBound: boolean = false;
   norBound: boolean = false;
   colBound: boolean = false;
+  uvBound: boolean = false;
   instPosBound: boolean = false;
   instScaBound: boolean = false;
   instRotBound: boolean = false;
@@ -65,6 +67,11 @@ abstract class Drawable {
   generateNor() {
     this.norBound = true;
     this.bufNor = gl.createBuffer();
+  }
+
+  generateUv() {
+    this.uvBound = true;
+    this.bufUv = gl.createBuffer();
   }
 
   generateColor() {
@@ -119,6 +126,13 @@ abstract class Drawable {
       gl.bindBuffer(gl.ARRAY_BUFFER, this.bufNor);
     }
     return this.norBound;
+  }
+
+  bindUv(): boolean {
+    if (this.uvBound) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.bufUv);
+    }
+    return this.uvBound;
   }
 
   elemCount(): number {

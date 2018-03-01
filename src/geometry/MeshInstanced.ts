@@ -1,4 +1,4 @@
-import { vec3, vec4, mat4 } from 'gl-matrix';
+import { vec2, vec3, vec4, mat4 } from 'gl-matrix';
 import Drawable from '../rendering/gl/Drawable';
 import { gl } from '../globals';
 
@@ -45,8 +45,11 @@ class MeshInstanced extends Drawable {
   positions: Float32Array;
   scales: Float32Array;
   rotations: Float32Array;
+  uvs: Float32Array;
 
   baseColor: vec4;
+  uvOffset: vec2;
+  uvScale: number;
   rawMesh: any;
 
   name: string;
@@ -65,6 +68,7 @@ class MeshInstanced extends Drawable {
     this.normals = new Float32Array([]);
     this.vertices = new Float32Array([]);
     this.colors = new Float32Array([]);
+    this.uvs = new Float32Array([]);
     this.indices = new Uint32Array([]);
   }
 
@@ -124,6 +128,7 @@ class MeshInstanced extends Drawable {
     let vertices = this.rawMesh.vertices;
     let indices = this.rawMesh.indices;
     let vertexNormals = this.rawMesh.vertexNormals;
+    let vertexUvs = this.rawMesh.textures;
 
     let vertexCount = vertices.length;
 
@@ -137,6 +142,8 @@ class MeshInstanced extends Drawable {
       this.baseColor[2],
       1.0
     ]);
+
+    let uvCounter = 0;
 
     for (var itr = 0; itr < vertexCount; itr+= 3) {
       let arr =  new Float32Array([
@@ -153,9 +160,17 @@ class MeshInstanced extends Drawable {
         1.0
       ]);
 
+      let arrUV =  new Float32Array([
+        this.uvOffset[0] + vertexUvs[uvCounter] * this.uvScale,
+        this.uvOffset[1] + vertexUvs[uvCounter + 1] * this.uvScale
+      ]);
+
+      uvCounter += 2;
+
       this.vertices = concatFloat32Array(this.vertices, arr);
       this.normals = concatFloat32Array(this.normals, arrN);
       this.colors = concatFloat32Array(this.colors, colorArr);
+      this.uvs = concatFloat32Array(this.uvs, arrUV);
     }
 
     this.indices = new Uint32Array(indices);
@@ -163,6 +178,7 @@ class MeshInstanced extends Drawable {
     this.generateIdx();
     this.generateVert();
     this.generateNor();
+    this.generateUv();
     this.generateColor();
     this.generateInstancePos();
     this.generateInstanceRotation();
@@ -190,6 +206,9 @@ class MeshInstanced extends Drawable {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bufCol);
     gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.STATIC_DRAW);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bufUv);
+    gl.bufferData(gl.ARRAY_BUFFER, this.uvs, gl.STATIC_DRAW);
       
     dCreateInfo(`Created ${this.name} with ${this.instances} Instances`);
   }

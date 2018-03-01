@@ -5,8 +5,8 @@ import {gl} from '../globals';
 let Noise = require('noisejs').Noise;
 
 var Logger = require('debug');
-var dCreateInfo = Logger("lsystem:info:mesh:NoisePlane");
-var dCreate = Logger("lsystem:trace:mesh:NoisePlane");
+var dCreateInfo = Logger("mainApp:mesh:info:NoisePlane");
+var dCreate = Logger("mainApp:mesh:trace:NoisePlane");
 
 function concatFloat32Array(first: Float32Array, second: Float32Array) {
   var firstLength = first.length;

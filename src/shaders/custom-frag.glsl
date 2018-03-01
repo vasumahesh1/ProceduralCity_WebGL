@@ -5,29 +5,24 @@ precision highp float;
 uniform vec4 u_Eye;
 uniform vec4 u_Color;
 uniform sampler2D u_Texture;
-uniform sampler2D u_Texture1;
-uniform sampler2D u_Texture2;
-uniform sampler2D u_Texture3;
 
 in vec4 fs_Nor;
 in vec4 fs_LightVec;
 in vec4 fs_Col;
-in vec4 fs_SphereNor;
 in vec4 fs_Pos;
-in float fs_Spec;
-in float fs_Valid;
-in float fs_useMatcap;
+in vec2 fs_UV;
 
 out vec4 out_Col;
 
 void main() {
 
   // Material base color (before shading)
-  vec4 diffuseColor = fs_Col;
+  // vec4 diffuseColor = fs_Col;
+  vec4 diffuseColor = texture(u_Texture, fs_UV);
   float alpha = diffuseColor.a;
 
   /*----------  Ambient  ----------*/
-  float ambientTerm = 0.3;
+  float ambientTerm = 0.5;
 
   /*----------  Lambertian  ----------*/
   float diffuseTerm = dot(normalize(fs_Nor), normalize(fs_LightVec));
