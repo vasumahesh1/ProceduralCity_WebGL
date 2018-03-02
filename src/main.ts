@@ -3,6 +3,7 @@ import * as Stats from 'stats-js';
 import * as DAT from 'dat-gui';
 import Icosphere from './geometry/Icosphere';
 import Square from './geometry/Square';
+import DynamicRoof from './geometry/DynamicRoof';
 import Cube from './geometry/Cube';
 import Line from './geometry/Line';
 import NoisePlane from './geometry/NoisePlane';
@@ -15,6 +16,7 @@ import { setGL } from './globals';
 import { ShaderControls, WaterControls } from './rendering/gl/ShaderControls';
 import ShaderProgram, { Shader } from './rendering/gl/ShaderProgram';
 import { Building, BuildingComponent, Lot } from './core/shape_grammer/Building';
+import PolygonLotConstructor from './core/shape_grammer/PolygonLotConstructor';
 import CityGenerator from './core/shape_grammer/CityGenerator';
 import AssetLibrary from './core/utils/AssetLibrary';
 import WeightedRNG from './core/rng/WeightedRNG';
@@ -37,6 +39,8 @@ let buildingComps: { [symbol: string]: BuildingComponent; } = { };
 let lotsMap: { [symbol: string]: Lot; } = { };
 
 let shapeGrammarSystem = new LSystemShapeGrammar(546);
+
+let dynamicConstructors: any = {};
 
 // Define an object with application parameters and button callbacks
 // This will be referred to by dat.GUI's functions that add GUI elements.
@@ -86,6 +90,7 @@ let boundingLines: Line;
 let sky: Sky;
 let plane: NoisePlane;
 let generator: CityGenerator;
+let roofMesh: DynamicRoof;
 
 let shaderControls: ShaderControls;
 
@@ -132,6 +137,9 @@ function loadAssets(callback?: any) {
   plane.create();
 
   boundingLines = new Line();
+  roofMesh = new DynamicRoof();
+
+  dynamicConstructors['PolygonLotConstructor'] = new PolygonLotConstructor();
 
   mainAtlas = new Texture('./psd/texture_atlas.png');
 
@@ -159,7 +167,7 @@ function loadAssets(callback?: any) {
   for (let itr = 0; itr < baseLots.lots.length; ++itr) {
     let lotData = baseLots.lots[itr];
     let lot = new Lot();
-    lot.load(lotData);
+    lot.load(lotData, dynamicConstructors);
     lotsMap[lotData.name] = lot;
   }
 
@@ -199,6 +207,7 @@ function loadAssets(callback?: any) {
       generator.buildingBlueprints = buildingBlueprints;
       generator.grammarSystem = shapeGrammarSystem;
       generator.debugLines = boundingLines;
+      generator.roofMesh = roofMesh;
 
       generator.build(30, 30, vec4.fromValues(0,0,0,0));
 
@@ -207,6 +216,7 @@ function loadAssets(callback?: any) {
       }
 
       boundingLines.create();
+      roofMesh.create();
 
       FlagIsRenderable = true;
 
@@ -536,6 +546,7 @@ function main() {
       renderer.render(camera, instanceShader, [mesh]);
     }
 
+    renderer.render(camera, regularShader, [roofMesh]);
     renderer.render(camera, visualShader, [boundingLines]);
   }
 

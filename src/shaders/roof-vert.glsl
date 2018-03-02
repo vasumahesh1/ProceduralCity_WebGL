@@ -41,7 +41,7 @@ void main() {
 
   fs_Pos = modelposition;
 
-  fs_Col = vs_Col; // vec4(64,21,15, 255) / 255.0;
+  fs_Col = vec4(64,21,15, 255) / 255.0;
 
   fs_UV = vs_UV;
 

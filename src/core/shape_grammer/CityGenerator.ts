@@ -25,6 +25,7 @@ class CityGenerator {
   buildingBlueprints: any;
   grammarSystem: any;
   debugLines: any;
+  roofMesh: any;
   rootTranslate: vec4;
 
   properties: Array<Property>;
@@ -151,7 +152,7 @@ class CityGenerator {
 
     for (let itr = 0; itr < this.buildingBlueprints.buildings.length; ++itr) {
       let building = this.buildingBlueprints.buildings[itr];
-      this.blueprints.push(new Building(building, this.buildingComps));
+      this.blueprints.push(new Building(building, this.buildingComps, this.roofMesh));
       // testBuilding.construct(vec4.fromValues(0,0,0,1), this.grammarSystem);
     }
 

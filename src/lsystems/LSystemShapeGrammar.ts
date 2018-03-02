@@ -45,6 +45,27 @@ function drawSquareLot() {
   this.scope.resultLots.push(returnObj);
 }
 
+function drawCircleLot() {
+  let scaleRatio = 1.0;
+  if (this.ruleData && this.ruleData[0]) {
+    scaleRatio = Number.parseFloat(this.ruleData[0]);
+  }
+
+  let returnObj: any = {};
+  returnObj.lot = this.scope.lotsMap.HalfCircle;
+  returnObj.localScale = scaleRatio * (this.scope.property.sideLength / 2.0);
+
+  let lotPosition = vec4.create();
+  // vec4.transformMat4(lotPosition, localOrigin, this.turtle.transform);
+  vec4.copy(lotPosition, this.turtle.position);
+
+  returnObj.localTranslation = lotPosition;
+
+  logInfo('Turtle Position:', lotPosition);
+
+  this.scope.resultLots.push(returnObj);
+}
+
 function rotateCCW90() {
   let transform = mat4.create();
   mat4.fromYRotation(transform, degreeToRad(-90));
@@ -125,7 +146,8 @@ class LSystemShapeGrammar {
     // this.system.addWeightedRule("P", "F{0.5}+F{0.5}bW", 100);
     // this.system.addWeightedRule("P", "E", 100);
     // this.system.addWeightedRule("P", "F{0.5}+F{0.5}bR", 100);
-    this.system.addWeightedRule("P", "F{0.5}+F{0.5}bT", 100);
+    // this.system.addWeightedRule("P", "F{0.5}+F{0.5}bT", 100);
+    this.system.addWeightedRule("P", "o", 100);
 
 
     this.system.addRule("Q", "bF{1}+Q");
@@ -141,6 +163,7 @@ class LSystemShapeGrammar {
     // this.system.addRule("X", "[F{0.5}b{0.33}]+X");
 
     this.system.addSymbol('b', drawSquareLot, []);
+    this.system.addSymbol('o', drawCircleLot, []);
     this.system.addSymbol('+', rotateCCW90, []);
     this.system.addSymbol('-', rotateCW90, []);
 

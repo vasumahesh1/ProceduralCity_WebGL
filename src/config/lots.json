@@ -16,13 +16,14 @@
       "end": [0, 0]
     }]
   }, {
-    "name": "Circle",
+    "name": "HalfCircle",
     "type": "DYNAMIC",
     "controller": "PolygonLotConstructor",
     "options": {
-      "startAngle": 0,
+      "startAngle": 180,
       "endAngle": 360,
-      "subDivs": 16
+      "subDivs": 8,
+      "radius": 0.5
     }
   }]
 }

@@ -108,6 +108,10 @@ class LotSide {
     this.sideNormal  = vec3.create();
     vec3.cross(this.sideNormal, pole, p);
 
+    let radiusVec = vec3.create();
+    radiusVec[0] = p[0] - pole[0];
+    radiusVec[2] = p[2] - pole[2];
+
     vec3.normalize(this.sideNormal, this.sideNormal);
 
     this.config = config;
@@ -168,7 +172,7 @@ class Lot {
     return returnValue;
   }
 
-  load(config: any) {    
+  load(config: any, dynamicConstructors: any) {    
     let defaultConfig = new LotConfig();
     defaultConfig.type = "pattern";
     defaultConfig.mode = "repeat";
@@ -180,6 +184,10 @@ class Lot {
       min: 1,
       max: 4
     });
+
+    if (config.type == "DYNAMIC") {
+      config.sides = dynamicConstructors[config.controller].getSides(config.options);
+    }
 
     for (var itr = 0; itr < config.sides.length; ++itr) {
       let side = config.sides[itr];
@@ -291,6 +299,7 @@ class GenerationConstraint {
 class Building {
   components: any;
   config: any;
+  roofMesh: any;
   name: string;
   grammar: ShapeGrammar;
   context : BuildingContext;
@@ -302,9 +311,10 @@ class Building {
   defaultSepConstraint: SepConstraint;
   floorBasedWallConstraint: Array<WallConstraint>;
 
-  constructor(config: any, components: any) {
+  constructor(config: any, components: any, roofMesh: any) {
     this.components = components;
     this.name = config.name;
+    this.roofMesh = roofMesh;
     this.grammar = new ShapeGrammar();
 
     this.loadConfig(config);
@@ -514,6 +524,8 @@ class Building {
 
     let roofComponent = this.context.roofComponent;
 
+    let dynamicSides = [];
+
     if (this.context.floorType == "RANDOM_ACROSS_LOTS") {
       floorCount = Math.round(this.defaultFloorConstraint.rng.roll());
       floorHeight = Math.round(this.defaultFloorConstraint.heightRng.roll());
@@ -531,7 +543,9 @@ class Building {
     vec4.add(roofTranslate, roofTranslate, this.context.overallTranslation);
     vec4.add(roofTranslate, roofTranslate, vec4.fromValues(0,floorHeight * floorCount,0, 0));
 
-    roofComponent.instance.addInstance(roofTranslate, vec4.fromValues(0,0,0,1), vec3.fromValues(lotScale / 7.5, lotScale / 7.5, lotScale / 7.5));
+    if (lot.type == "FIXED") {
+      roofComponent.instance.addInstance(roofTranslate, vec4.fromValues(0,0,0,1), vec3.fromValues(lotScale / 7.5, lotScale / 7.5, lotScale / 7.5));
+    }
 
     for (var itr = 0; itr < lot.sides.length; ++itr) {
       let side = Object.create(lot.sides[itr]);
@@ -582,6 +596,22 @@ class Building {
         scale[2] = -scale[2];
       }
 
+      if (lot.type == "DYNAMIC") {
+        let dynTrans = vec4.fromValues(side.startX, 0, side.startY, 1);
+        vec4.add(dynTrans, dynTrans, this.context.overallTranslation);
+        vec4.add(dynTrans, dynTrans, vec4.fromValues(0, floorHeight * floorCount, 0, 0));
+
+        dynamicSides.push(dynTrans);
+
+        if (itr == lot.sides.length - 1) {
+          dynTrans = vec4.fromValues(side.endX, 0, side.endY, 1);
+          vec4.add(dynTrans, dynTrans, this.context.overallTranslation);
+          vec4.add(dynTrans, dynTrans, vec4.fromValues(0, floorHeight * floorCount, 0, 0));
+
+          dynamicSides.push(dynTrans);
+        }
+      }
+
       for (var floorIdx = 0; floorIdx < floorCount; ++floorIdx) {
         let floorY = floorHeight * floorIdx;
         let wallYScale = floorHeight / 3.0; // Todo: take from Component
@@ -594,7 +624,7 @@ class Building {
           this.context.placeSeparator = this.defaultFloorConstraint.placementRng.roll() == "CAN_PLACE";
         }
 
-        if (this.context.placeSeparator && floorIdx != floorCount - 1) {
+        if (this.context.placeSeparator && floorIdx != floorCount - 1 && lot.type == "FIXED") {
           let floorY = floorHeight * (floorIdx + 1);
           let separatorTranslate = vec4.create();
           vec4.copy(separatorTranslate, lotStartVector);
@@ -663,6 +693,18 @@ class Building {
             vec4.add(translate, translate, vec4.fromValues(widthDirection[0], widthDirection[1], widthDirection[2], 0));
           }
         }
+      }
+    }
+
+    if (lot.type == "DYNAMIC") {
+      logError('Dynamic Sides', dynamicSides);
+      logError('Dynamic Sides', lot.sides);
+      for (var idx = 0; idx < dynamicSides.length - 2; idx++) {
+        let v1 = dynamicSides[0];
+        let v2 = dynamicSides[idx + 1];
+        let v3 = dynamicSides[idx + 2];
+
+        this.roofMesh.addTriangle(v1, v2, v3);      
       }
     }
   }
