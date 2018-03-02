@@ -201,9 +201,19 @@ Notice the use of `controller` that invokes a JS Function to get the `LotSides` 
 
 Dynamic Lots are, you _guessed it_ dynamically roofed by just a simple triangulation over them.
 
-### Noise cache
+### Noise cache & Population Noise
 
-I cached some of the noise into const variables that later gets injected by webpack. It helps in saving generation time.
+I cached some of the noise into const variables that later gets injected by webpack. It helps in saving generation time. I use noise on a lot things, they control almost everything related to construction.
+
+Population based noise to change building heights is also included. I haven't had much time to play with it, Since I was working mostly on building creation.
+
+### Windows
+
+My Building have windows that are separtely modeled. They are used in a very different LSystem like config that varies per building and per side.
+
+It works by generating a string for its Layout. For example a layout can be `*W*W*W*` which means that `LotSide` where these windows are to be placed, will construct three equally spaced Windows.
+
+Another way to extend different window combinations. These are also present in Building Blueprint JSON. Also, If the string exceeds the actual length available then the algorithm tries to best fit the windows that it can stuff in that `LotSide`.
 
 ### Building Collision
 
@@ -303,6 +313,23 @@ this.system.addSymbol('V', moveVector, []);
 
 this.system.addSymbol('S', setSameSize, []);
 ```
+
+
+### Asset Loader
+
+I made a simple asset loader using AsyncJS and Promises. Not that it is a part of the assignment, but worth mentioning as it simplified my asset imports (by combining it with Components).
+
+```js
+let assets:any = {};
+assets.testMesh = './src/bjs/testMesh.obj';
+
+assetLibrary.load(assets)
+    .then(function() {
+      assetLibrary.meshes['testMesh'] // Mesh
+    })
+``` 
+
+Future upgrade might include importing Textures.
 
 ### Different Possible Buildings
 
