@@ -8,7 +8,7 @@ Please run this on Windows. There seems to be a glitch in my mac with this code.
 
 My focus on this project was purely on configuration that enables me to draw different buildings with minimal effort. Sadly, couldn't spend much time making it pretty. I have some small stuffs like a distance fog, some textures on windows and roofs but thats pretty much it.
 
-[Demo Link](https://vasumahesh1.github.io/ProceduralCity_WebGL/)g
+[Demo Link](https://vasumahesh1.github.io/ProceduralCity_WebGL/)
 
 ## Grammar Design
 
