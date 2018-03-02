@@ -1,5 +1,6 @@
 import { vec2, vec3, vec4, mat4, glMatrix } from 'gl-matrix';
 import { Building, Property, GenerationConstraint } from './Building';
+import RNG from '../rng/RNG';
 
 var Logger = require('debug');
 var logTrace = Logger("mainApp:CityGenerator:trace");
@@ -150,6 +151,8 @@ class CityGenerator {
 
     this.rootTranslate = rootTranslate;
 
+    let propertySizeRng = new RNG(4231, 1, 4);
+
     for (let itr = 0; itr < this.buildingBlueprints.buildings.length; ++itr) {
       let building = this.buildingBlueprints.buildings[itr];
       this.blueprints.push(new Building(building, this.buildingComps, this.roofMesh));
@@ -166,7 +169,9 @@ class CityGenerator {
         constraint.setPopulation(0.0, 1.0);
         constraint.setLandValue(0.0, 1.0);
 
-        let potentialProperty = new Property(60);
+        let val = Math.round(propertySizeRng.roll('native'));
+
+        let potentialProperty = new Property(val * 30);
         potentialProperty.setCenter(vec3.fromValues(coordVec2[0], 0, coordVec2[1]));
 
         if (!this.canPlaceProperty(potentialProperty)) {

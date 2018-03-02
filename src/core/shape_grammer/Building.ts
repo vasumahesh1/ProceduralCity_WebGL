@@ -108,9 +108,11 @@ class LotSide {
     this.sideNormal  = vec3.create();
     vec3.cross(this.sideNormal, pole, p);
 
-    let radiusVec = vec3.create();
-    radiusVec[0] = p[0] - pole[0];
-    radiusVec[2] = p[2] - pole[2];
+    // let radiusVec = vec3.fromValues(this.startX, 0, this.startY);
+    // if (vec3.dot(this.sideNormal, radiusVec) < 0) {
+    //   this.sideNormal[0] *= -1;
+    //   this.sideNormal[2] *= -1;
+    // }
 
     vec3.normalize(this.sideNormal, this.sideNormal);
 
@@ -531,6 +533,11 @@ class Building {
       floorHeight = Math.round(this.defaultFloorConstraint.heightRng.roll());
     }
 
+    if (lotGenerateConfig.forceHeight) {
+      floorCount = this.context.floorCount;
+      floorHeight = this.context.floorHeight;
+    }
+
     if (this.context.floorSeparator == "RANDOM_ACROSS_LOTS") {
       this.context.placeSeparator = this.defaultFloorConstraint.placementRng.roll() == "CAN_PLACE";
     }
@@ -682,6 +689,10 @@ class Building {
             localScale[1] = wallYScale;
             localScale[2] *= -1;
 
+            if (localScale[2] > 0 && lot.type == "DYNAMIC") {
+              localScale[2] *= -1;
+            }
+
             let localTranslate = vec4.create();
             vec4.add(localTranslate, translate, sideNormalVec4);
 
@@ -724,7 +735,7 @@ class Building {
     this.context.floorSeparatorPlacement = this.defaultFloorConstraint.placementRng.roll();
     this.context.placeSeparator = this.context.floorSeparatorPlacement == "CAN_PLACE";
 
-    let valItr = Math.round(this.iterationRng.roll());
+    let valItr = Math.round(this.iterationRng.roll('native'));
 
     logError('Using Iterations:', valItr);
 
@@ -746,6 +757,7 @@ class Building {
       vec4.add(this.context.overallTranslation, rootTranslation, scaledLocal);
 
       logTrace(`Overall Translation for Lot:`, this.context.overallTranslation);
+      logError(`Lot OBJ from LSystem:`, obj);
 
       this.constructLot(obj);
     }

@@ -22,7 +22,7 @@ class RNG {
     this.rollItr = 232;
   }
 
-  roll(): number {
+  roll(native? : any): number {
     let x = (this.rollItr * this.seed * 13) % simplexNoise['sizeX'];
     let y = (this.rollItr * this.seed * 29) % simplexNoise['sizeY'];
 
@@ -30,6 +30,10 @@ class RNG {
     this.rollItr += 19;
 
     noise = (noise + 1.0) / 2.0;
+
+    if (native) {
+      noise = Math.random();
+    }
 
     let val = (noise * (this.max - this.min)) + this.min;
 
