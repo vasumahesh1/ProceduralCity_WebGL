@@ -36,5 +36,26 @@
       "radius": 0.5,
       "offset": [0.5, 0.5]
     }
+  }, {
+    "name": "TiltedSquare",
+    "type": "DYNAMIC",
+    "controller": "PolygonLotConstructor",
+    "options": {
+      "startAngle": 180,
+      "endAngle": 360,
+      "subDivs": 2,
+      "radius": 0.5
+    }
+  }, {
+    "name": "Hex",
+    "type": "DYNAMIC",
+    "controller": "PolygonLotConstructor",
+    "options": {
+      "startAngle": 0,
+      "endAngle": 360,
+      "subDivs": 6,
+      "radius": 0.5,
+      "offset": [0.5, 0.5]
+    }
   }]
 }

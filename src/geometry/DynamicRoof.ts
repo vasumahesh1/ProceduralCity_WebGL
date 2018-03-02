@@ -60,9 +60,10 @@ class DynamicRoof extends Drawable {
     this.nors.push(0, 1, 0, 0);
     this.nors.push(0, 1, 0, 0);
 
-    this.cols.push(1, 1, 1, 1);
-    this.cols.push(1, 1, 1, 1);
-    this.cols.push(1, 1, 1, 1);
+    this.cols.push(0.752, 0.752, 0.764, 1);
+    this.cols.push(0.752, 0.752, 0.764, 1);
+    this.cols.push(0.752, 0.752, 0.764, 1);
+    this.cols.push(0.752, 0.752, 0.764, 1);
 
     this.index.push(this.indexCounter);
     this.index.push(this.indexCounter + 1);

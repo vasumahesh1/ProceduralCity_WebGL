@@ -9,9 +9,7 @@ import Stack from '../ds/Stack';
 let Noise = require('noisejs').Noise;
 
 var Logger = require('debug');
-var dConstruct = Logger("lsystem:trace:construction");
-
-var logTrace = Logger("mainApp:CoreLSystem:info");
+var logTrace = Logger("mainApp:CoreLSystem:trace");
 var logError = Logger("mainApp:CoreLSystem:error");
 
 const cachedNoise = require('../../config/noise.json');
@@ -357,8 +355,8 @@ class LSystem {
 
     this.maxDepth = possibleDepth;
 
-    dConstruct("Resultant String: " + current);
-    dConstruct("Resultant Max Depth: ", this.maxDepth);
+    logTrace("Resultant String: " + current);
+    logTrace("Resultant Max Depth: ", this.maxDepth);
 
     return this;
   }

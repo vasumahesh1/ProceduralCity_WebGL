@@ -407,10 +407,6 @@ class Building {
       logError(`${this.name} No Floors in Config Provided`);
     }
 
-    if (!config.lot) {
-      logError(`${this.name} No Lot in Config Provided`);
-    }
-
     this.config = config;
 
     this.loadWalls(config.walls);
@@ -438,7 +434,7 @@ class Building {
 
     let calcLength = length;
 
-    logError('Updating BuildString', buildString);
+    logTrace('Updating BuildString', buildString);
 
     for (var itr = 0; itr < buildString.length; itr += 1) {
       let obj = buildString[itr];
@@ -451,7 +447,7 @@ class Building {
 
       if (calcLength <= 0) {
         buildString = buildString.substr(0, itr);
-        logError('Updated BuildString', buildString);
+        logTrace('Updated BuildString', buildString);
         break;
       }
     }
@@ -708,8 +704,8 @@ class Building {
     }
 
     if (lot.type == "DYNAMIC") {
-      logError('Dynamic Sides', dynamicSides);
-      logError('Dynamic Sides', lot.sides);
+      logTrace('Dynamic Sides', dynamicSides);
+      logTrace('Dynamic Sides', lot.sides);
       for (var idx = 0; idx < dynamicSides.length - 2; idx++) {
         let v1 = dynamicSides[0];
         let v2 = dynamicSides[idx + 1];
@@ -737,12 +733,12 @@ class Building {
 
     let valItr = Math.round(this.iterationRng.roll('native'));
 
-    logError('Using Iterations:', valItr);
+    logTrace('Using Iterations:', valItr);
 
     shapeGrammar.addScope('property', property);
     let generatedLots = shapeGrammar.construct(valItr + 1, generationConstraint);
     
-    logError('Total Lots Generated:', generatedLots.length);
+    logTrace('Total Lots Generated:', generatedLots.length);
 
     for (var itr = 0; itr < generatedLots.length; ++itr) {
       let obj = generatedLots[itr];
@@ -757,7 +753,7 @@ class Building {
       vec4.add(this.context.overallTranslation, rootTranslation, scaledLocal);
 
       logTrace(`Overall Translation for Lot:`, this.context.overallTranslation);
-      logError(`Lot OBJ from LSystem:`, obj);
+      logTrace(`Lot OBJ from LSystem:`, obj);
 
       this.constructLot(obj);
     }

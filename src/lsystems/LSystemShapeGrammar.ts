@@ -10,7 +10,6 @@ import {
 
 var Logger = require('debug');
 var logTrace = Logger("mainApp:shapeGrammar:trace:instance:transform");
-var logInfo = Logger("mainApp:shapeGrammar:info:instance:transform");
 var logError = Logger("mainApp:shapeGrammar:error:instance:transform");
 
 let localOrigin = vec4.fromValues(0,0,0,1);
@@ -41,7 +40,7 @@ function drawSquareLot() {
 
   returnObj.localTranslation = lotPosition;
 
-  logInfo('Turtle Position:', lotPosition);
+  logTrace('Turtle Position:', lotPosition);
 
   this.scope.resultLots.push(returnObj);
 }
@@ -63,7 +62,7 @@ function drawHalfCircleLot() {
 
   returnObj.localTranslation = lotPosition;
 
-  logInfo('Turtle Position:', lotPosition);
+  logTrace('Turtle Position:', lotPosition);
 
   this.scope.resultLots.push(returnObj);
 }
@@ -85,7 +84,51 @@ function drawCircleLot() {
 
   returnObj.localTranslation = lotPosition;
 
-  logInfo('Turtle Position:', lotPosition);
+  logTrace('Turtle Position:', lotPosition);
+
+  this.scope.resultLots.push(returnObj);
+}
+
+function drawHalfSquare() {
+  let scaleRatio = 1.0;
+  if (this.ruleData && this.ruleData[0]) {
+    scaleRatio = Number.parseFloat(this.ruleData[0]);
+  }
+
+  let returnObj: any = {};
+  returnObj.lot = this.scope.lotsMap.TiltedSquare;
+  returnObj.localScale = scaleRatio * (this.scope.property.sideLength / 2.0);
+  returnObj.forceHeight = this.scope.forceHeight;
+
+  let lotPosition = vec4.create();
+  // vec4.transformMat4(lotPosition, localOrigin, this.turtle.transform);
+  vec4.copy(lotPosition, this.turtle.position);
+
+  returnObj.localTranslation = lotPosition;
+
+  logTrace('Turtle Position:', lotPosition);
+
+  this.scope.resultLots.push(returnObj);
+}
+
+function drawShape(shape: string) {
+  let scaleRatio = 1.0;
+  if (this.ruleData && this.ruleData[0]) {
+    scaleRatio = Number.parseFloat(this.ruleData[0]);
+  }
+
+  let returnObj: any = {};
+  returnObj.lot = this.scope.lotsMap[shape];
+  returnObj.localScale = scaleRatio * (this.scope.property.sideLength / 2.0);
+  returnObj.forceHeight = this.scope.forceHeight;
+
+  let lotPosition = vec4.create();
+  // vec4.transformMat4(lotPosition, localOrigin, this.turtle.transform);
+  vec4.copy(lotPosition, this.turtle.position);
+
+  returnObj.localTranslation = lotPosition;
+
+  logTrace('Turtle Position:', lotPosition);
 
   this.scope.resultLots.push(returnObj);
 }
@@ -129,7 +172,7 @@ function moveForward() {
   vec4.copy(headingWorld, this.turtle.heading);
   vec4.scale(headingWorld, headingWorld, magnitude);
 
-  logError('Resultant Heading For Forward', headingWorld);
+  logTrace('Resultant Heading For Forward', headingWorld);
 
   let transform = mat4.create();
   mat4.fromTranslation(transform,  vec3.fromValues(headingWorld[0], headingWorld[1], headingWorld[2]));
@@ -180,6 +223,11 @@ class LSystemShapeGrammar {
     this.system.addWeightedRule("P", "I", 100);
     this.system.addWeightedRule("P", "F{0.5}+F{0.5}zA", 100);
     this.system.addWeightedRule("P", "D", 100);
+    
+    // Hex Rules
+    this.system.addWeightedRule("P", "G", 100);
+    this.system.addWeightedRule("P", "F{0.5}+F{0.5}cH", 100);
+    this.system.addWeightedRule("P", "J", 100);
 
 
     this.system.addRule("Q", "bF{1}+Q");
@@ -188,15 +236,22 @@ class LSystemShapeGrammar {
 
     this.system.addRule("R", "F{1.0}^{0.5}b{0.5}F{1.0}-R");
     this.system.addRule("T", "F{1.0}[^{0.5}b{0.5}]F{1.0}-T");
-    this.system.addRule("Y", "oF{0.5}+F{1}b");
+    this.system.addRule("Y", "S{1}oF{-2}+F{-2}x{-1}");
     this.system.addRule("U", "S{1}oF{-2}+F{-2}o{-1}");
+
     this.system.addRule("I", "zF{1}+I");
     this.system.addRule("A", "F{1.0}z{0.5}F{1.0}-A");
     this.system.addRule("D", "[F{0.2}+F{0.2}z{0.75}]F{1.75}+D");
 
+    this.system.addRule("G", "cF{1}+G");
+    this.system.addRule("H", "F{1.0}c{0.5}F{1.0}-H");
+    this.system.addRule("J", "[F{0.2}+F{0.2}c{0.75}]F{1.75}+J");
+
     this.system.addSymbol('b', drawSquareLot, []);
     this.system.addSymbol('o', drawHalfCircleLot, []);
-    this.system.addSymbol('z', drawCircleLot, []);
+    this.system.addSymbol('z', drawShape, ['Circle']);
+    this.system.addSymbol('x', drawShape, ['TiltedSquare']);
+    this.system.addSymbol('c', drawShape, ['Hex']);
 
     this.system.addSymbol('+', rotateCCW90, []);
     this.system.addSymbol('-', rotateCW90, []);
@@ -226,7 +281,7 @@ class LSystemShapeGrammar {
     this.scope.resultLots = [];
 
     this.system.construct(itr, generationConstraint);
-    logInfo('Production', this.system.rootString.join(''));
+    logTrace('Production', this.system.rootString.join(''));
     this.system.process(this.scope);
 
     return this.scope.resultLots;
