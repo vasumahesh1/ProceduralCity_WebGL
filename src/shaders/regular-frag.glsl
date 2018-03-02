@@ -14,6 +14,8 @@ in vec2 fs_UV;
 
 out vec4 out_Col;
 
+const vec4 FOG_NIGHT_COLOR = vec4(0.0f, 0.0f, 0.1f, 1.0f);
+
 void main() {
 
   // Material base color (before shading)
@@ -48,4 +50,21 @@ void main() {
   finalColor.z = clamp(finalColor.z, 0.0, 1.0);
 
   out_Col = finalColor;
+
+  /*----------  Distance Fog  ----------*/
+  float distance = length(fs_Pos - vec4(100, 0, 100, 1));
+
+  vec4 currentFog = FOG_NIGHT_COLOR;
+
+  if (distance > 200.0f) {
+    distance = distance - 200.0f;
+    float power = distance * 0.1f;
+
+    // Exponential Fog but start only some units ahead of the player
+    // 1 - exp(-length(wpos - cpos) * c)
+    float fogFactor = 1.0 - exp(-power);
+    fogFactor = clamp(fogFactor, 0.0, 1.0);
+
+    out_Col = mix(out_Col, currentFog, fogFactor);
+  }
 }

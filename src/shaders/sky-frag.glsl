@@ -132,7 +132,7 @@ void addMeteor(vec2 uv, inout vec4 targetColor, float startX, float lengthX, flo
 vec4 getNightColor(vec3 rayDir) {
   float noise = fbm(rayDir * 237.5);
 
-  vec4 color = vec4(0,0,0,1);
+  vec4 color = vec4(0.0f, 0.0f, 0.1f,1);
 
   if (noise > 0.5) {
     color = vec4(noise, noise, noise, 1.0);

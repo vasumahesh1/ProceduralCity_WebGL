@@ -34,6 +34,7 @@ class NoisePlane extends Drawable {
   indices: Uint32Array;
   vertices: Float32Array;
   normals: Float32Array;
+  colors: Float32Array;
   
   seed: number;
   width: number;
@@ -71,6 +72,7 @@ class NoisePlane extends Drawable {
 
     this.normals = new Float32Array([]);
     this.vertices = new Float32Array([]);
+    this.colors = new Float32Array([]);
     this.indices = new Uint32Array([]);
 
     let noise = new Noise(seed);
@@ -83,6 +85,16 @@ class NoisePlane extends Drawable {
     let heightStep = this.height / this.subDivY;
 
     let idxCount = 0;
+
+    let terrainColor = vec3.fromValues(125,198, 56);
+    vec3.scale(terrainColor, terrainColor, 1.0 / 255);
+
+    let colorArray = new Float32Array([
+            terrainColor[0], terrainColor[1], terrainColor[2], 1,
+            terrainColor[0], terrainColor[1], terrainColor[2], 1,
+            terrainColor[0], terrainColor[1], terrainColor[2], 1,
+            terrainColor[0], terrainColor[1], terrainColor[2], 1
+            ]);
 
     for(let startX = -this.width / 2; startX < this.width / 2; startX += widthStep) {
       for(let startY = -this.height / 2; startY < this.height / 2; startY += heightStep) {
@@ -129,6 +141,9 @@ class NoisePlane extends Drawable {
             ])
           );
 
+
+        this.colors = concatFloat32Array(this.colors, colorArray);
+
         this.indices = concatUint32Array(this.indices,
           new Uint32Array([
             idxCount, idxCount + 1, idxCount + 2,
@@ -143,6 +158,7 @@ class NoisePlane extends Drawable {
     this.generateIdx();
     this.generateVert();
     this.generateNor();
+    this.generateColor();
 
     this.count = this.indices.length;
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.bufIdx);
@@ -153,6 +169,9 @@ class NoisePlane extends Drawable {
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.bufVert);
     gl.bufferData(gl.ARRAY_BUFFER, this.vertices, gl.STATIC_DRAW);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.bufCol);
+    gl.bufferData(gl.ARRAY_BUFFER, this.colors, gl.STATIC_DRAW);
 
     dCreateInfo(`Created Plane with ${this.vertices.length} Vertices`);
   }

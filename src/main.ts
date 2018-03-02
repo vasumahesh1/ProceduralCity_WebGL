@@ -52,7 +52,7 @@ let controls = {
   axiom: "[F][/-F][*+F][++*F][--*F]",
   seed: 858.739,
   iterations: 4,
-  lightDirection: [150, 150, 0],
+  lightDirection: [100, 150, 100],
   influencers: {
     sunlight: 0.0,
     gravity: 5.0,
@@ -133,7 +133,7 @@ function loadAssets(callback?: any) {
     sky.destory();
   }
 
-  plane = new NoisePlane(400, 400, 75, 75, 8123);
+  plane = new NoisePlane(2000, 2000, 2, 2, 8123);
   plane.create();
 
   boundingLines = new Line();
@@ -256,35 +256,6 @@ function constructGUI() {
   // Add controls to the gui
   const gui = new DAT.GUI();
   gui.add(controls, 'saveImage').name('Save Image');
-  gui.add(controls, 'toggleCollisionButton').name('Toggle Collision View');
-  gui.add(controls, 'toggleLeavesButton').name('Toggle Leaves');
-  gui.add(controls, 'iterations', 1, 10).step(1.0).name('Iterations').listen();
-  gui.add(controls, 'seed', 0, 32767).step(0.05).name('Seed').listen();
-  gui.add(controls, 'axiom').name('Axiom');
-
-  let group = gui.addFolder('Environment Influencers');
-  group.add(controls.influencers, 'gravity', 0, 30).step(1.0).name('Gravity Factor').listen();
-  group.add(controls.influencers, 'sunlight', 0, 2).step(0.1).name('Sunlight Bend Factor').listen();
-  group.add(controls.lightDirection, '0', -20, 20).step(1.0).name('Light X').listen();
-  group.add(controls.lightDirection, '1', -20, 20).step(1.0).name('Light Y').listen();
-  group.add(controls.lightDirection, '2', -20, 20).step(1.0).name('Light Z').listen();
-
-  group = gui.addFolder('Constraints');
-  group.add(controls.constraints, 'minCollisionDistance', 0, 0.05).step(0.005).name('minBranchCollisionDistance').listen();
-  group.add(controls.constraints, 'rotateSwirl', 0, 90).step(1.0).name('Swirl Rotate').listen();
-  group.add(controls.constraints, 'rotateTilt', 0, 90).step(1.0).name('Tilt Rotate').listen();
-  group.add(controls.constraints, 'rotateTNoise', 0, 20).step(1.0).name('Tilt Noise').listen();
-  group.add(controls.constraints, 'rotateSNoise', 0, 20).step(1.0).name('Swirl Noise').listen();
-  group.add(controls.influencers, 'collisionCheck').name('Collision Check').listen();
-
-  group = gui.addFolder('Colors');
-  group.addColor(LEAF_COLOR_GRADIENT, '0').name('Leaf Color 1').listen();
-  group.addColor(LEAF_COLOR_GRADIENT, '1').name('Leaf Color 2').listen();
-  group.addColor(LEAF_COLOR_GRADIENT, '2').name('Leaf Color 3').listen();
-  group.addColor(LEAF_COLOR_GRADIENT, '3').name('Leaf Color 4').listen();
-  group.addColor(LEAF_COLOR_GRADIENT, '4').name('Leaf Color 5').listen();
-
-  gui.add(controls, 'createButton').name('Generate');
 }
 
 function lookAtMat4(out: any, eye: any, center: any, up: any) {
@@ -547,7 +518,7 @@ function main() {
     }
 
     renderer.render(camera, regularShader, [roofMesh]);
-    renderer.render(camera, visualShader, [boundingLines]);
+    // renderer.render(camera, visualShader, [boundingLines]);
   }
 
   // This function will be called every frame

@@ -33,6 +33,10 @@ class WallConstraint {
   availability: any;
 }
 
+class WindowConstraint {
+  rng: any;
+}
+
 class FloorConstraint {
   rng: any;
   typeRng: any;
@@ -308,6 +312,7 @@ class Building {
 
   iterationRng: any;
   defaultWallConstraint: WallConstraint;
+  defaultWindowConstraint: WindowConstraint;
   defaultFloorConstraint: FloorConstraint;
   defaultRoofConstraint: RoofConstraint;
   defaultSepConstraint: SepConstraint;
@@ -398,6 +403,12 @@ class Building {
     this.defaultSepConstraint = constraint;
   }
 
+  private loadWindows(config: any) {
+    let constraint = new WindowConstraint();
+    constraint.rng = this.getRNG(config.rng);
+    this.defaultWindowConstraint = constraint;
+  }
+
   loadConfig(config: any) {
     if (!config.walls) {
       logError(`${this.name} No Walls in Config Provided`);
@@ -407,12 +418,19 @@ class Building {
       logError(`${this.name} No Floors in Config Provided`);
     }
 
+    if (!config.windows) {
+      logError(`${this.name} No Windows in Config Provided`);
+    }
+
     this.config = config;
 
     this.loadWalls(config.walls);
     this.loadFloors(config.floors);
     this.loadRoofs(config.roofs);
     this.loadSep(config.floors.separator);
+    this.loadWindows(config.windows);
+
+
 
     this.iterationRng = this.getRNG(config.iteration.rng);
 
@@ -503,7 +521,9 @@ class Building {
       let distrib = length / 2.0;
 
       commands[commands.length - 1].width += distrib;
-      commands[1].width += distrib;
+      if (length > 1) {
+        commands[1].width += distrib;
+      }
     }
 
     logTrace(`Final Commands: `, commands);
@@ -718,8 +738,8 @@ class Building {
 
   construct(rootTranslation: vec4, shapeGrammar: any, generationConstraint: any, property: Property) {
     this.context = new BuildingContext();
-    this.context.wallComponent = this.components.WallComponent1;
-    this.context.windowComponent = this.components.WindowComponent1;
+    this.context.wallComponent = this.components[this.defaultWallConstraint.rng.roll()];
+    this.context.windowComponent = this.components[this.defaultWindowConstraint.rng.roll()];
     this.context.rootTranslation = rootTranslation;
     this.context.roofComponent = this.components[this.defaultRoofConstraint.rng.roll()];
     this.context.sepComponent = this.components[this.defaultSepConstraint.objRng.roll()];
@@ -737,8 +757,16 @@ class Building {
 
     shapeGrammar.addScope('property', property);
     let generatedLots = shapeGrammar.construct(valItr + 1, generationConstraint);
+
+    let floorGap = (generationConstraint.population.min - 0.6) * 8;
     
     logTrace('Total Lots Generated:', generatedLots.length);
+
+    // this.context.floorCount += floorGap;
+
+    // if (this.context.floorCount < 1) {
+    //   this.context.floorCount = 1;
+    // }
 
     for (var itr = 0; itr < generatedLots.length; ++itr) {
       let obj = generatedLots[itr];

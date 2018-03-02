@@ -6,6 +6,9 @@ var Logger = require('debug');
 var logTrace = Logger("mainApp:CityGenerator:trace");
 var logError = Logger("mainApp:CityGenerator:error");
 
+let Noise = require('noisejs').Noise;
+
+
 const cachedNoise = require('../../config/noise.json');
 const populationNoise = cachedNoise['positive_noise_1'];
 const simplex2D = cachedNoise['simplex2d'];
@@ -35,6 +38,9 @@ class CityGenerator {
   constructor(seed: number) {
     this.seed = seed;
 
+    let noise = new Noise(seed);
+    this.noiseGen = noise;
+
     this.properties = new Array<Property>();
     this.blueprints = new Array<Building>();
   }
@@ -60,7 +66,7 @@ class CityGenerator {
 
     let noiseVal = populationNoise['values'][x][y];
 
-    return  noiseVal > 0 ? noiseVal : 0;
+    return  noiseVal > 0 ? noiseVal : -noiseVal;
 
     // return (this.fbm2D(p, 8) + 1.0) / 2.0;
   }
@@ -122,7 +128,11 @@ class CityGenerator {
     for (var itr = 0; itr < this.blueprints.length; ++itr) {
       let current = this.blueprints[itr];
 
-      let result = constraint.isValid(current.config.constraints);
+      let result = false;
+
+      if (current.config.constraints.population < constraint.population.min) {
+        result = true;
+      }
 
       if (result) {
         selectedBlueprints.push(result);
@@ -138,7 +148,7 @@ class CityGenerator {
 
     let idx = Math.floor(random * selectedBlueprints.length);
 
-    logError('Blueprint Selected IDX', idx);
+    logTrace('Blueprint Selected IDX', idx);
 
     this.blueprints[idx].construct(finalPosition, this.grammarSystem, constraint, property);
 
@@ -151,7 +161,7 @@ class CityGenerator {
 
     this.rootTranslate = rootTranslate;
 
-    let propertySizeRng = new RNG(4231, 1, 4);
+    let propertySizeRng = new RNG(4231, 1, 5);
 
     for (let itr = 0; itr < this.buildingBlueprints.buildings.length; ++itr) {
       let building = this.buildingBlueprints.buildings[itr];
@@ -165,8 +175,8 @@ class CityGenerator {
         let populationLevel = this.populationNoise(coordVec2);
 
         let constraint = new GenerationConstraint();
-        constraint.setPopulation(populationLevel, populationLevel + 1.0);
-        constraint.setPopulation(0.0, 1.0);
+        constraint.setPopulation(populationLevel, 1.0);
+        // constraint.setPopulation(0.0, 1.0);
         constraint.setLandValue(0.0, 1.0);
 
         let val = Math.round(propertySizeRng.roll('native'));
@@ -177,6 +187,7 @@ class CityGenerator {
         if (!this.canPlaceProperty(potentialProperty)) {
           continue;
         }
+
 
         this.constructProperty(potentialProperty, constraint);
       }

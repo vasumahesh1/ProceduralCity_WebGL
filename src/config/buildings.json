@@ -2,6 +2,16 @@
   "buildings": [{
     "name": "Building Blueprint 1",
     "selectionWeight": 100,
+    "windows": {
+      "rng": {
+        "seed": 17,
+        "type": "WeightedRNG",
+        "val": {
+          "WindowComponent1": 10,
+          "WindowComponent2": 10
+        }
+      }
+    },
     "walls": [{
       "rng": {
         "seed": 17,
@@ -18,7 +28,10 @@
         "seed": 123,
         "type": "WeightedRNG",
         "val": {
-          "WallComponent1": 10
+          "WallComponent1": 10,
+          "WallComponent2": 10,
+          "WallComponent3": 10,
+          "WallComponent4": 10
         }
       },
       "default": true
@@ -45,8 +58,8 @@
       "rng": {
         "seed": 3,
         "type": "RNG",
-        "min": 7,
-        "max": 12
+        "min": 12,
+        "max": 25
       },
       "type": {
         "rng": {
@@ -104,6 +117,16 @@
   }, {
     "name": "Building Blueprint 2",
     "selectionWeight": 100,
+    "windows": {
+      "rng": {
+        "seed": 17,
+        "type": "WeightedRNG",
+        "val": {
+          "WindowComponent1": 10,
+          "WindowComponent2": 10
+        }
+      }
+    },
     "walls": [{
       "rng": {
         "seed": 17,
@@ -120,7 +143,10 @@
         "seed": 123,
         "type": "WeightedRNG",
         "val": {
-          "WallComponent1": 10
+          "WallComponent1": 10,
+          "WallComponent2": 10,
+          "WallComponent3": 10,
+          "WallComponent4": 10
         }
       },
       "default": true
@@ -200,6 +226,234 @@
     },
     "constraints": {
       "population": 0.6,
+      "landValue": 0.0,
+      "grammarControlsFloors": false
+    }
+  }, {
+    "name": "Building Blueprint 3",
+    "selectionWeight": 100,
+    "windows": {
+      "rng": {
+        "seed": 17,
+        "type": "WeightedRNG",
+        "val": {
+          "WindowComponent1": 10,
+          "WindowComponent2": 10,
+          "WindowComponent3": 20
+        }
+      }
+    },
+    "walls": [{
+      "rng": {
+        "seed": 3242,
+        "type": "WeightedRNG",
+        "val": {
+          "WallComponent1": 10
+        }
+      },
+      "availability": {
+        "floors": [3, 5]
+      }
+    }, {
+      "rng": {
+        "seed": 123,
+        "type": "WeightedRNG",
+        "val": {
+          "WallComponent1": 10
+        }
+      },
+      "default": true
+    }],
+    "roofs": {
+      "rng": {
+        "seed": 2342,
+        "type": "WeightedRNG",
+        "val": {
+          "RoofComponent1": 10,
+          "RoofComponent2": 50
+        }
+      }
+    },
+    "iteration": {
+      "rng": {
+        "seed": 234,
+        "type": "RNG",
+        "min": 2,
+        "max": 4
+      }
+    },
+    "floors": {
+      "rng": {
+        "seed": 3,
+        "type": "RNG",
+        "min": 1,
+        "max": 3
+      },
+      "type": {
+        "rng": {
+          "seed": 123,
+          "type": "WeightedRNG",
+          "val": {
+            "RANDOM_ACROSS_LOTS": 20,
+            "SAME_ACROSS_LOTS": 40
+          }
+        }
+      },
+      "height": {
+        "rng": {
+          "seed": 213,
+          "type": "RNG",
+          "min": 3,
+          "max": 5
+        }
+      },
+      "separator": {
+        "rng": {
+          "seed": 4323,
+          "type": "WeightedRNG",
+          "val": {
+            "RANDOM_ACROSS_LOTS": 50,
+            "RANDOM_ACROSS_FLOORS": 0,
+            "FIXED": 100
+          }
+        },
+        "placement": {
+          "rng": {
+            "seed": 2134,
+            "type": "WeightedRNG",
+            "val": {
+              "CAN_PLACE": 100,
+              "CANNOT_PLACE": 0
+            }
+          }
+        },
+        "obj": {
+          "rng": {
+            "seed": 124,
+            "type": "WeightedRNG",
+            "val": {
+              "SepComponent1": 10
+            }
+          }
+        }
+      }
+    },
+    "constraints": {
+      "population": 0.1,
+      "landValue": 0.0,
+      "grammarControlsFloors": false
+    }
+  }, {
+    "name": "Building Blueprint 3",
+    "selectionWeight": 100,
+    "windows": {
+      "rng": {
+        "seed": 17,
+        "type": "WeightedRNG",
+        "val": {
+          "WindowComponent1": 10,
+          "WindowComponent2": 10,
+          "WindowComponent3": 20
+        }
+      }
+    },
+    "walls": [{
+      "rng": {
+        "seed": 3242,
+        "type": "WeightedRNG",
+        "val": {
+          "WallComponent1": 10
+        }
+      },
+      "availability": {
+        "floors": [3, 5]
+      }
+    }, {
+      "rng": {
+        "seed": 123,
+        "type": "WeightedRNG",
+        "val": {
+          "WallComponent1": 10
+        }
+      },
+      "default": true
+    }],
+    "roofs": {
+      "rng": {
+        "seed": 2342,
+        "type": "WeightedRNG",
+        "val": {
+          "RoofComponent1": 10,
+          "RoofComponent2": 50
+        }
+      }
+    },
+    "iteration": {
+      "rng": {
+        "seed": 234,
+        "type": "RNG",
+        "min": 2,
+        "max": 4
+      }
+    },
+    "floors": {
+      "rng": {
+        "seed": 3,
+        "type": "RNG",
+        "min": 4,
+        "max": 5
+      },
+      "type": {
+        "rng": {
+          "seed": 123,
+          "type": "WeightedRNG",
+          "val": {
+            "RANDOM_ACROSS_LOTS": 20,
+            "SAME_ACROSS_LOTS": 40
+          }
+        }
+      },
+      "height": {
+        "rng": {
+          "seed": 213,
+          "type": "RNG",
+          "min": 3,
+          "max": 5
+        }
+      },
+      "separator": {
+        "rng": {
+          "seed": 4323,
+          "type": "WeightedRNG",
+          "val": {
+            "RANDOM_ACROSS_LOTS": 50,
+            "RANDOM_ACROSS_FLOORS": 0,
+            "FIXED": 100
+          }
+        },
+        "placement": {
+          "rng": {
+            "seed": 2134,
+            "type": "WeightedRNG",
+            "val": {
+              "CAN_PLACE": 100,
+              "CANNOT_PLACE": 0
+            }
+          }
+        },
+        "obj": {
+          "rng": {
+            "seed": 124,
+            "type": "WeightedRNG",
+            "val": {
+              "SepComponent1": 10
+            }
+          }
+        }
+      }
+    },
+    "constraints": {
+      "population": 0.1,
       "landValue": 0.0,
       "grammarControlsFloors": false
     }
